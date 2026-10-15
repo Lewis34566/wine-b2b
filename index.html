@@ -1,10 +1,12 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-page="index">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>Yantai Wine Hub | Chinese Wine Supplier Database</title>
+  <title>Yantai Wine Hub · 中国葡萄酒供应商数据库</title>
+  <meta name="description" id="metaDesc" content="一站式检索烟台及周边经过核实的酒庄、出口商与 OEM 定制工厂" />
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
 
   <style>
     * {
@@ -28,6 +30,7 @@
     /* Navbar */
 
     nav {
+      position: relative;
       height: 72px;
       display: flex;
       align-items: center;
@@ -120,6 +123,30 @@
       white-space: nowrap;
     }
 
+    /* Language switch */
+    .lang-switch {
+      border: 1px solid #ddd; border-radius: 6px; padding: 6px 8px;
+      font-size: 13px; background: white; color: #222; cursor: pointer;
+      font-family: inherit; outline: none;
+    }
+    /* Toast (shared component, copied from css/style.css) */
+    .toast {
+      position: fixed; top: 14px; left: 50%; transform: translate(-50%, -80px);
+      z-index: 1200; background: #2b2320; color: #fff;
+      padding: 10px 18px; border-radius: 24px; font-size: 14px; max-width: 86vw;
+      transition: transform .25s ease; box-shadow: 0 4px 18px rgba(43,35,32,.08);
+    }
+    .toast.show { transform: translate(-50%, 0); }
+    .toast.success { background: #36723b; }
+    .toast.error { background: #b3261e; }
+    /* Config alert banner (dev-facing, zh only) */
+    .config-alert {
+      background: #f7f0d8; color: #6d5412; border-bottom: 1px solid #c9a227;
+      padding: 10px 16px; font-size: 13px; text-align: center;
+    }
+
+    .hamburger { display: none; background: none; border: 1px solid #e6d3d9; color: #8b1e3f; border-radius: 6px; padding: 8px 12px; font-size: 16px; cursor: pointer; font-family: inherit; }
+
     .hidden {
       display: none !important;
     }
@@ -132,14 +159,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      background:
-        linear-gradient(
-          90deg,
-          rgba(255,255,255,0.98),
-          rgba(255,255,255,0.78)
-        ),
-        url("https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=1600&q=80")
-        center/cover;
+      background: linear-gradient(90deg, rgba(255,255,255,.98), rgba(255,255,255,.72)), linear-gradient(135deg, #5c1229, #8b1e3f 55%, #a03a5c);
     }
 
     .hero-content {
@@ -164,7 +184,7 @@
       letter-spacing: -1.5px;
     }
 
-    .hero h1 span {
+    .hero h1 span.hero-accent {
       color: #8b1e3f;
     }
 
@@ -205,6 +225,8 @@
 
     .hero-buttons a {
       display: inline-block;
+      text-align: center;
+      line-height: 1.35;
     }
 
     /* Stats */
@@ -474,6 +496,8 @@
       margin-bottom: 25px;
     }
 
+    .modal-content a.buy-btn { display:block; }
+
     .close {
       margin-top: 15px;
       border: none;
@@ -488,9 +512,14 @@
 
     @media (max-width: 800px) {
 
+      .hamburger { display: block; }
       .nav-links {
-        display: none;
+        display: none; position: absolute; top: 72px; left: 0; right: 0;
+        background: #fff; flex-direction: column; gap: 0;
+        border-bottom: 1px solid #eee; padding: 8px 7%; z-index: 50;
       }
+      .nav-links.open { display: flex; }
+      .nav-links a { padding: 10px 0; border-bottom: 1px solid #f2f2f2; }
 
       .nav-user {
         display: none;
@@ -539,6 +568,8 @@
 
 <body>
 
+<div id="configAlert" class="config-alert hidden">⚠️ Supabase 密钥还没填：打开 <code>js/config.js</code>，把第 10、13 行的占位符换成你自己的值（步骤见 <code>docs/Supabase控制台操作指南.md</code>）</div>
+
 <!-- NAV -->
 
 <nav>
@@ -547,17 +578,24 @@
   </div>
 
   <div class="nav-links">
-    <a href="#database">Database</a>
-    <a href="#how">How It Works</a>
-    <a href="#pricing">Pricing</a>
-    <a href="home.html">酒款大厅</a>
+    <a href="#database" data-i18n="idx.navDb">数据库</a>
+    <a href="#how" data-i18n="idx.navHow">使用流程</a>
+    <a href="#pricing" data-i18n="idx.navPricing">定价</a>
+    <a href="home.html" data-i18n="nav.hall">酒款大厅</a>
   </div>
 
+  <button id="navToggle" class="hamburger" type="button" onclick="toggleNav()" aria-label="Menu">☰</button>
+
   <div class="nav-actions">
+    <select data-lang-switch class="lang-switch" onchange="WineApp.setLang(this.value)">
+      <option value="zh">中文</option>
+      <option value="en">English</option>
+      <option value="ru">Русский</option>
+    </select>
     <span id="navUser" class="nav-user"></span>
-    <a id="navDash" class="nav-button hidden" href="buyer-dashboard.html">我的后台</a>
-    <a id="navLogin" class="nav-button" href="login.html">登录 / 注册</a>
-    <button id="navLogout" class="nav-ghost hidden" onclick="WineApp.logout()">退出</button>
+    <a id="navDash" class="nav-button hidden" href="buyer-dashboard.html" data-i18n="nav.dash">我的后台</a>
+    <a id="navLogin" class="nav-button" href="login.html" data-i18n="nav.login">登录</a>
+    <button id="navLogout" class="nav-ghost hidden" type="button" onclick="WineApp.logout()" data-i18n="nav.logout">退出</button>
   </div>
 </nav>
 
@@ -568,36 +606,13 @@
 
   <div class="hero-content">
 
-    <div class="tag">
-      B2B Wine Sourcing Platform
-    </div>
+    <div class="tag" data-i18n="idx.tag">B2B 葡萄酒采购平台</div>
 
-    <h1>
-      Find Reliable
-      <span>Wine Suppliers</span>
-      in Yantai, China.
-    </h1>
+    <h1><span data-i18n="idx.heroA">在烟台，找到可靠的</span><span data-i18n="idx.heroSpan" class="hero-accent">葡萄酒供应商</span><span data-i18n="idx.heroB"></span></h1>
 
-    <p>
-      Discover verified Chinese wine suppliers, wineries,
-      exporters and OEM manufacturers in one searchable database.
-    </p>
+    <p data-i18n="idx.heroSub">一站式检索烟台及周边经过核实的酒庄、出口商与 OEM 定制工厂</p>
 
-    <div class="hero-buttons">
-
-      <a href="home.html">
-        <button class="primary-btn">
-          Explore Suppliers · 酒款大厅
-        </button>
-      </a>
-
-      <a href="#pricing">
-        <button class="secondary-btn">
-          Get Full Database — $10
-        </button>
-      </a>
-
-    </div>
+    <div class="hero-buttons"><a class="primary-btn" href="home.html" data-i18n="idx.btnExplore">进入酒款大厅</a><a class="secondary-btn" href="#pricing" data-i18n="idx.btnPricing">获取完整数据库 — $10</a></div>
 
   </div>
 
@@ -609,23 +624,23 @@
 <section class="stats">
 
   <div class="stat">
-    <h2>50+</h2>
-    <p>Wine Suppliers</p>
+    <h2 data-i18n="idx.s1v">5</h2>
+    <p data-i18n="idx.s1t">酒款类型</p>
   </div>
 
   <div class="stat">
-    <h2>10+</h2>
-    <p>Wine Categories</p>
+    <h2 data-i18n="idx.s2v">3</h2>
+    <p data-i18n="idx.s2t">核心子产区</p>
   </div>
 
   <div class="stat">
-    <h2>100%</h2>
-    <p>B2B Focused</p>
+    <h2 data-i18n="idx.s3v">100%</h2>
+    <p data-i18n="idx.s3t">专注 B2B</p>
   </div>
 
   <div class="stat">
-    <h2>$10</h2>
-    <p>Full Database Access</p>
+    <h2 data-i18n="idx.s4v">$10</h2>
+    <p data-i18n="idx.s4t">完整数据库一次性获取</p>
   </div>
 
 </section>
@@ -637,11 +652,9 @@
 
   <div class="section-title">
 
-    <h2>Wine Supplier Database</h2>
+    <h2 data-i18n="idx.dbTitle">葡萄酒供应商数据库</h2>
 
-    <p>
-      Preview selected suppliers from Yantai's wine industry.
-    </p>
+    <p data-i18n="idx.dbSub">预览烟台葡萄酒产业带的精选供应商</p>
 
   </div>
 
@@ -651,29 +664,22 @@
     <input
       type="text"
       id="searchInput"
-      placeholder="Search winery, city or wine type..."
+      placeholder="搜索酒庄、城市或酒款类型…"
+      data-i18n-ph="idx.searchPh"
       onkeyup="searchDatabase()"
     />
 
     <select id="wineType" onchange="searchDatabase()">
 
-      <option value="">All Wine Types</option>
+      <option value="" data-i18n="idx.typeAll">全部酒款类型</option>
 
-      <option value="Red Wine">
-        Red Wine
-      </option>
+      <option value="red" data-i18n="idx.typeRed">红葡萄酒</option>
 
-      <option value="White Wine">
-        White Wine
-      </option>
+      <option value="white" data-i18n="idx.typeWhite">白葡萄酒</option>
 
-      <option value="Sparkling">
-        Sparkling
-      </option>
+      <option value="sparkling" data-i18n="idx.typeSpark">起泡酒</option>
 
-      <option value="OEM">
-        OEM
-      </option>
+      <option value="oem" data-i18n="idx.typeOem">OEM 定制</option>
 
     </select>
 
@@ -688,11 +694,11 @@
 
         <tr>
 
-          <th>Company</th>
-          <th>Location</th>
-          <th>Wine Type</th>
-          <th>Export</th>
-          <th>Contact</th>
+          <th data-i18n="idx.thCompany">公司</th>
+          <th data-i18n="idx.thLocation">产区</th>
+          <th data-i18n="idx.thType">酒款类型</th>
+          <th data-i18n="idx.thExport">出口</th>
+          <th data-i18n="idx.thContact">联系方式</th>
 
         </tr>
 
@@ -700,85 +706,58 @@
 
       <tbody id="supplierTable">
 
-        <tr>
+        <tr data-type="red">
+
+          <td data-i18n="idx.r1c">烟台九彤酒业有限公司</td>
+
+          <td data-i18n="idx.r1l">蓬莱</td>
+
+          <td data-i18n="idx.r1t">红葡萄酒</td>
 
           <td>
-            Yantai Winery A
+            <span class="badge" data-i18n="idx.r1e">出口</span>
           </td>
 
-          <td>
-            Penglai
-          </td>
-
-          <td>
-            Red Wine
-          </td>
-
-          <td>
-            <span class="badge">
-              Export
-            </span>
-          </td>
-
-          <td class="locked">
-            contact@example.com
-          </td>
+          <td class="locked" data-i18n="idx.r1ct">info@jiutong-wine.cn</td>
 
         </tr>
 
 
-        <tr>
+        <tr data-type="white">
+
+          <td data-i18n="idx.r2c">蓬莱葡盛酒庄</td>
+
+          <td data-i18n="idx.r2l">龙口</td>
+
+          <td data-i18n="idx.r2t">白葡萄酒</td>
 
           <td>
-            Yantai Winery B
+            <span class="badge" data-i18n="idx.r2e">出口</span>
           </td>
 
-          <td>
-            Longkou
-          </td>
-
-          <td>
-            White Wine
-          </td>
-
-          <td>
-            <span class="badge">
-              Export
-            </span>
-          </td>
-
-          <td class="locked">
-            +86 138 **** 8888
-          </td>
+          <td class="locked" data-i18n="idx.r2ct">+86 535-8517***</td>
 
         </tr>
 
 
-        <tr>
+        <tr data-type="sparkling">
+
+          <td data-i18n="idx.r3c">烟台海悦葡萄酒业</td>
+
+          <td data-i18n="idx.r3l">烟台</td>
+
+          <td data-i18n="idx.r3t">起泡酒</td>
 
           <td>
-            Yantai Winery C
+            <span class="badge" data-i18n="idx.r3e">出口</span>
           </td>
 
-          <td>
-            Yantai
-          </td>
-
-          <td>
-            Sparkling
-          </td>
-
-          <td>
-            <span class="badge">
-              Export
-            </span>
-          </td>
-
-          <td class="locked">
-            sales@********.com
-          </td>
+          <td class="locked" data-i18n="idx.r3ct">export@******-wine.cn</td>
 
         </tr>
+
+
+        <tr id="noResultsRow" class="hidden"><td colspan="5" data-i18n="idx.noResults">没有找到匹配的供应商</td></tr>
 
       </tbody>
 
@@ -793,13 +772,9 @@
 
 <section class="pricing" id="pricing">
 
-  <h2>
-    Get Full Access
-  </h2>
+  <h2 data-i18n="idx.priceTitle">获取完整数据库</h2>
 
-  <p class="pricing-subtitle">
-    One-time payment. Download the complete supplier database.
-  </p>
+  <p class="pricing-subtitle" data-i18n="idx.priceSub">一次性付费，下载完整供应商数据库</p>
 
 
   <div class="price-card">
@@ -808,36 +783,29 @@
       $10
     </div>
 
-    <p>
-      Yantai Wine Supplier Database
-    </p>
+    <p data-i18n="idx.priceCard">烟台葡萄酒供应商数据库</p>
 
     <ul>
 
-      <li>50+ wine suppliers</li>
+      <li data-i18n="idx.priceLi1">蓬莱核心产区供应商名录</li>
 
-      <li>Business emails</li>
+      <li data-i18n="idx.priceLi2">商务邮箱</li>
 
-      <li>Company websites</li>
+      <li data-i18n="idx.priceLi3">公司网站</li>
 
-      <li>Phone / WhatsApp information</li>
+      <li data-i18n="idx.priceLi4">电话 / WhatsApp 联系方式</li>
 
-      <li>Wine categories</li>
+      <li data-i18n="idx.priceLi5">酒款类型</li>
 
-      <li>Export capability</li>
+      <li data-i18n="idx.priceLi6">出口能力</li>
 
-      <li>OEM availability</li>
+      <li data-i18n="idx.priceLi7">OEM 定制能力</li>
 
-      <li>Supplier source & verification date</li>
+      <li data-i18n="idx.priceLi8">供应商来源与核验日期</li>
 
     </ul>
 
-    <button
-      class="buy-btn"
-      onclick="openPayment()"
-    >
-      Unlock Database — $10
-    </button>
+    <button class="buy-btn" type="button" onclick="openPayment()" data-i18n="idx.buyBtn">解锁数据库 — $10</button>
 
   </div>
 
@@ -850,13 +818,9 @@
 
   <div class="section-title">
 
-    <h2>
-      How It Works
-    </h2>
+    <h2 data-i18n="idx.howTitle">使用流程</h2>
 
-    <p>
-      Find Chinese wine suppliers in three simple steps.
-    </p>
+    <p data-i18n="idx.howSub">三步找到中国葡萄酒供应商</p>
 
   </div>
 
@@ -869,14 +833,9 @@
         1
       </div>
 
-      <h3>
-        Search
-      </h3>
+      <h3 data-i18n="idx.step1t">搜索</h3>
 
-      <p>
-        Search suppliers by location, wine type,
-        export capability and OEM availability.
-      </p>
+      <p data-i18n="idx.step1p">按产区、酒款类型、出口能力与 OEM 定制能力检索供应商</p>
 
     </div>
 
@@ -887,14 +846,9 @@
         2
       </div>
 
-      <h3>
-        Unlock
-      </h3>
+      <h3 data-i18n="idx.step2t">解锁</h3>
 
-      <p>
-        Purchase the complete database for only
-        $10.
-      </p>
+      <p data-i18n="idx.step2p">仅需 $10 一次性获取完整数据库</p>
 
     </div>
 
@@ -905,14 +859,9 @@
         3
       </div>
 
-      <h3>
-        Contact
-      </h3>
+      <h3 data-i18n="idx.step3t">对接</h3>
 
-      <p>
-        Contact Chinese wine suppliers directly
-        and start your sourcing process.
-      </p>
+      <p data-i18n="idx.step3p">直接联系中国葡萄酒供应商，开始采购</p>
 
     </div>
 
@@ -929,9 +878,7 @@
     © 2026 Yantai Wine Hub
   </div>
 
-  <div>
-    B2B Wine Sourcing · Yantai · China
-  </div>
+  <div data-i18n="idx.footerSub">B2B 葡萄酒采购 · 烟台 · 中国</div>
 
 </footer>
 
@@ -942,71 +889,82 @@
 
   <div class="modal-content">
 
-    <h2>
-      Unlock Yantai Wine Database
-    </h2>
+    <h2 data-i18n="idx.modalTitle">解锁烟台葡萄酒数据库</h2>
 
-    <p>
-      Full database access — $10
-    </p>
+    <p data-i18n="idx.modalBody">完整供应商数据库为一次性 $10 付费内容，支付通道尚未接入。演示期间，完整在线平台（酒款大厅、询价、下单）免费开放。</p>
 
-    <button
-      class="buy-btn"
-      onclick="alert('Payment gateway will be connected here.')"
-    >
-      Continue to Payment
-    </button>
+    <a class="buy-btn" href="home.html" data-i18n="idx.modalBtn" style="display:inline-block;text-align:center;line-height:1.35">进入酒款大厅（演示免费开放）</a>
 
-    <button
-      class="close"
-      onclick="closePayment()"
-    >
-      Cancel
-    </button>
+    <button class="close" type="button" onclick="closePayment()" data-i18n="idx.modalCancel">取消</button>
 
   </div>
 
 </div>
 
 
+<div id="toast" class="toast"></div>
+
 <script>
 
   function searchDatabase() {
 
-    const input =
+    var input =
       document
         .getElementById("searchInput")
         .value
         .toLowerCase();
 
-    const type =
+    var type =
       document
         .getElementById("wineType")
-        .value
-        .toLowerCase();
+        .value;
 
-    const rows =
+    var rows =
       document.querySelectorAll(
         "#supplierTable tr"
       );
 
-    rows.forEach(row => {
+    var visibleCount = 0;
 
-      const text =
-        row.innerText.toLowerCase();
+    rows.forEach(function (row) {
 
-      const matchSearch =
-        text.includes(input);
+      if (row.id === "noResultsRow") return;
 
-      const matchType =
-        !type || text.includes(type);
+      var rowType =
+        row.getAttribute("data-type") || "";
+
+      var matchType =
+        !type || rowType === type;
+
+      var matchSearch =
+        row.innerText.toLowerCase().includes(input);
 
       row.style.display =
-        matchSearch && matchType
+        matchType && matchSearch
           ? ""
           : "none";
 
+      if (row.style.display !== "none") {
+        visibleCount++;
+      }
+
     });
+
+    document
+      .getElementById("noResultsRow")
+      .classList.toggle(
+        "hidden",
+        visibleCount > 0
+      );
+
+  }
+
+
+  function toggleNav() {
+
+    document
+      .querySelector(".nav-links")
+      .classList.toggle("open");
 
   }
 
@@ -1033,6 +991,7 @@
 <script src="js/vendor-supabase.js"></script>
 <script src="js/config.js"></script>
 <script src="js/supabase.js"></script>
+<script src="js/i18n.js"></script>
 <script>
   /* 接入登录态：已登录时展示公司名 + 角色徽章，并把入口换成「我的后台 / 退出」 */
   if (window.WineApp && WineApp.initNav) WineApp.initNav();
