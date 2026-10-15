@@ -5,6 +5,14 @@
 
 视觉基础取自「Yantai Wine Hub」落地页（酒红 `#8b1e3f`）。
 
+## 🌐 在线演示
+
+浏览器直接打开，无需安装任何东西：
+
+**https://lewis34566.github.io/wine-b2b/**
+
+（GitHub Pages 托管，源码仓库：https://github.com/Lewis34566/wine-b2b ）
+
 ## 功能
 
 | 页面 | 功能 |
@@ -49,7 +57,7 @@
    ```bash
    python -m http.server 8000
    ```
-   浏览器打开 <http://localhost:8000/index.html>。
+   浏览器打开 <http://localhost:8000/index.html>（或直接用上面的在线演示链接）。
 
 > ⚠️ 不要用 `file://` 双击直接打开 html。浏览器会限制 localStorage，
 > 登录态会丢。一定要走 http 服务。
@@ -81,7 +89,9 @@
 
 ## 发布到公网（让所有人访问）
 
-本项目是纯静态站点，可直接发布到公网，任何人（不限于同一 WiFi）打开链接就能注册 / 登录 / 浏览。
+本项目已发布在 **GitHub Pages**：https://lewis34566.github.io/wine-b2b/ （每次 push 到 `main` 自动更新）。
+
+本项目是纯静态站点，任何静态托管平台都可以发布（GitHub Pages / Netlify / Vercel / 任意 Nginx），任何人（不限于同一 WiFi）打开链接就能注册 / 登录 / 浏览。
 发布后请务必确认下面这一项，否则别人能注册但登不进去：
 
 - **让"注册即登录"生效**（二选一，推荐方式 B）：
