@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-page="login">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>登录 / 注册 - 酒链 B2B</title>
+  <meta name="description" id="metaDesc" content="供应商发布酒款，采购商询价下单，站内消息直接谈" />
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -13,93 +15,98 @@
   <header class="topbar">
     <a class="brand" href="home.html">酒链<span>B2B</span></a>
     <nav class="topnav">
-      <a href="home.html">酒款大厅</a>
-      <a id="navDash" href="buyer-dashboard.html">我的后台</a>
-      <a href="messages.html">消息</a>
-      <a href="profile.html">资料</a>
+      <a href="home.html" data-i18n="nav.hall">酒款大厅</a>
+      <a id="navDash" href="buyer-dashboard.html" data-i18n="nav.dash">我的后台</a>
+      <a href="messages.html" data-i18n="nav.msgs">消息</a>
+      <a href="profile.html" data-i18n="nav.profile">资料</a>
     </nav>
     <div class="topbar-user">
+      <select data-lang-switch class="lang-switch" onchange="WineApp.setLang(this.value)">
+        <option value="zh">中文</option>
+        <option value="en">English</option>
+        <option value="ru">Русский</option>
+      </select>
       <span id="navUser" class="nav-user"></span>
-      <a id="navLogin" class="btn btn-sm btn-primary hidden" href="login.html">登录</a>
-      <button id="navLogout" class="btn btn-sm btn-ghost hidden" onclick="WineApp.logout()">退出</button>
+      <a id="navLogin" class="btn btn-sm btn-primary hidden" href="login.html" data-i18n="nav.login">登录</a>
+      <button id="navLogout" class="btn btn-sm btn-ghost hidden" type="button" onclick="WineApp.logout()" data-i18n="nav.logout">退出</button>
     </div>
   </header>
 
   <main class="auth-page">
     <section class="hero-slim">
-      <h1>找靠谱葡萄酒供应商<br/>就在 <span>酒链 B2B</span></h1>
-      <p class="hero-sub">供应商发布酒款 · 采购商询价下单 · 站内消息直接谈</p>
-      <a class="btn btn-gold" href="home.html">先逛逛酒款大厅 →</a>
+      <h1><span data-i18n="login.hero1a">找靠谱葡萄酒供应商</span><br/><span data-i18n="login.hero1b">就在</span> <span>酒链 B2B</span></h1>
+      <p class="hero-sub" data-i18n="login.heroSub">供应商发布酒款 · 采购商询价下单 · 站内消息直接谈</p>
+      <a class="btn btn-gold" href="home.html" data-i18n="login.browse">先逛逛酒款大厅 →</a>
     </section>
 
     <section class="auth-wrap">
       <div class="auth-card">
         <div class="auth-tabs">
-          <button id="tabBtnLogin" class="auth-tab active" onclick="switchAuth('login')">登录</button>
-          <button id="tabBtnRegister" class="auth-tab" onclick="switchAuth('register')">注册</button>
+          <button id="tabBtnLogin" type="button" class="auth-tab active" onclick="switchAuth('login')" data-i18n="login.tabLogin">登录</button>
+          <button id="tabBtnRegister" type="button" class="auth-tab" onclick="switchAuth('register')" data-i18n="login.tabRegister">注册</button>
         </div>
 
         <!-- 登录 -->
         <form id="loginPanel" onsubmit="doLogin(event)">
-          <label>邮箱
+          <label><span data-i18n="login.email">邮箱</span>
             <input type="email" id="liEmail" required placeholder="you@example.com">
           </label>
-          <label>密码
-            <input type="password" id="liPassword" required minlength="6" placeholder="至少 6 位">
+          <label><span data-i18n="login.password">密码</span>
+            <input type="password" id="liPassword" required minlength="6" placeholder="至少 6 位" data-i18n-ph="login.passwordPh">
           </label>
-          <button type="submit" class="btn btn-primary btn-block">登 录</button>
+          <button type="submit" class="btn btn-primary btn-block" data-i18n="login.loginBtn">登 录</button>
           <div id="loginHint" class="auth-tip auth-tip-warn hidden"></div>
-          <p class="auth-tip">还没有账号？<a href="javascript:switchAuth('register')">去注册</a></p>
+          <p class="auth-tip"><span data-i18n="login.noAccount">还没有账号？</span><a href="#" data-i18n="login.goRegister" onclick="switchAuth('register');return false">去注册</a></p>
         </form>
 
         <!-- 注册 -->
         <form id="registerPanel" class="hidden" onsubmit="doRegister(event)">
-          <label>我 是</label>
+          <label data-i18n="login.iAm">我 是</label>
           <div class="role-cards">
             <label class="role-card">
               <input type="radio" name="regRole" value="supplier" checked>
               <span class="role-card-icon">🍷</span>
-              <strong>供应商</strong>
-              <small>发布酒款、回复询价、接订单</small>
+              <strong data-i18n="login.roleSup">供应商</strong>
+              <small data-i18n="login.roleSupDesc">发布酒款、回复询价、接订单</small>
             </label>
             <label class="role-card">
               <input type="radio" name="regRole" value="buyer">
               <span class="role-card-icon">🛒</span>
-              <strong>采购商</strong>
-              <small>搜酒、询价、下单、收货</small>
+              <strong data-i18n="login.roleBuy">采购商</strong>
+              <small data-i18n="login.roleBuyDesc">搜酒、询价、下单、收货</small>
             </label>
           </div>
-          <label>公司名称
-            <input type="text" id="rgCompany" placeholder="供应商必填，例如：烟台九彤酒业">
+          <label><span data-i18n="login.company">公司名称</span>
+            <input type="text" id="rgCompany" placeholder="供应商必填，例如：烟台九彤酒业" data-i18n-ph="login.companyPh">
           </label>
-          <label>邮箱
+          <label><span data-i18n="login.email">邮箱</span>
             <input type="email" id="rgEmail" required placeholder="you@example.com">
           </label>
-          <label>密码
-            <input type="password" id="rgPassword" required minlength="6" placeholder="至少 6 位">
+          <label><span data-i18n="login.password">密码</span>
+            <input type="password" id="rgPassword" required minlength="6" placeholder="至少 6 位" data-i18n-ph="login.passwordPh">
           </label>
-          <label>确认密码
-            <input type="password" id="rgConfirm" required minlength="6" placeholder="再输一遍">
+          <label><span data-i18n="login.confirmPwd">确认密码</span>
+            <input type="password" id="rgConfirm" required minlength="6" placeholder="再输一遍" data-i18n-ph="login.confirmPwdPh">
           </label>
           <div class="form-row">
-            <label>联系人
-              <input type="text" id="rgContact" placeholder="选填">
+            <label><span data-i18n="login.contact">联系人</span>
+              <input type="text" id="rgContact" placeholder="选填" data-i18n-ph="login.contactPh">
             </label>
-            <label>电话
-              <input type="tel" id="rgPhone" placeholder="选填">
+            <label><span data-i18n="login.phone">电话</span>
+              <input type="tel" id="rgPhone" placeholder="选填" data-i18n-ph="login.phonePh">
             </label>
           </div>
-          <button type="submit" class="btn btn-primary btn-block">注 册</button>
+          <button type="submit" class="btn btn-primary btn-block" data-i18n="login.registerBtn">注 册</button>
           <div id="mailHint" class="auth-tip auth-tip-warn hidden"></div>
-          <p class="auth-tip">已有账号？<a href="javascript:switchAuth('login')">去登录</a></p>
+          <p class="auth-tip"><span data-i18n="login.hasAccount">已有账号？</span><a href="#" data-i18n="login.goLogin" onclick="switchAuth('login');return false">去登录</a></p>
         </form>
       </div>
     </section>
 
     <section class="steps-strip">
-      <div class="step"><div class="step-num">1</div><h3>发布酒款</h3><p>供应商 1 分钟上架酒款</p></div>
-      <div class="step"><div class="step-num">2</div><h3>询价下单</h3><p>采购商搜索筛选，直接谈</p></div>
-      <div class="step"><div class="step-num">3</div><h3>流转收货</h3><p>确认→发货→收货，全程可见</p></div>
+      <div class="step"><div class="step-num">1</div><h3 data-i18n="login.step1t">发布酒款</h3><p data-i18n="login.step1p">供应商 1 分钟上架酒款</p></div>
+      <div class="step"><div class="step-num">2</div><h3 data-i18n="login.step2t">询价下单</h3><p data-i18n="login.step2p">采购商搜索筛选，直接谈</p></div>
+      <div class="step"><div class="step-num">3</div><h3 data-i18n="login.step3t">流转收货</h3><p data-i18n="login.step3p">确认→发货→收货，全程可见</p></div>
     </section>
   </main>
 
@@ -108,8 +115,11 @@
   <script src="js/vendor-supabase.js"></script>
   <script src="js/config.js"></script>
   <script src="js/supabase.js"></script>
+  <script src="js/i18n.js"></script>
   <script>
     /* ---------- 页面逻辑：登录 / 注册 ---------- */
+
+    var t = WineApp.t;
 
     function switchAuth(which) {
       document.getElementById('loginPanel').classList.toggle('hidden', which !== 'login');
@@ -123,31 +133,28 @@
     function val(id) { return document.getElementById(id).value.trim(); }
 
     var lastMail = ''; // 记住最近一次待验证的邮箱，供「重发验证邮件」使用
+    var verifyState = null; // 记录当前验证提示所在的容器与邮箱，供语言切换时重建
 
     // 提示「需要先验证邮箱」，并给出一键重发按钮
     function showVerifyHint(containerId, email) {
       lastMail = email || lastMail;
+      verifyState = { c: containerId, e: email || lastMail };
       var safe = WineApp.escapeHtml(lastMail);
       var el = document.getElementById(containerId);
       el.innerHTML =
-        '账号已创建，但还需要完成<b>邮箱验证</b>才能登录。<br>' +
-        '请到 <b>' + safe + '</b> 查收验证邮件，点击里面的链接后，再回来登录。<br>' +
+        t('login.verifyHint', { email: safe }) +
         '<button type="button" class="btn btn-ghost btn-sm" style="margin-top:8px" ' +
-        'onclick="resendMail()">重新发送验证邮件</button>' +
+        'onclick="resendMail()">' + t('login.resendMail') + '</button>' +
         '<span style="display:block;margin-top:6px;font-size:12px;opacity:.75">' +
-        '一直收不到？可能是被邮箱服务商拦截，或 Supabase 未配置发信服务（默认额度有限）。<br>' +
-        '管理员想实现「注册即登录」，二选一：<br>' +
-        '① 后台 Authentication → Sign In / Providers → 顶部 <b>User Signups</b> 区域关闭 <b>Confirm email</b>；<br>' +
-        '② 或在 SQL Editor 执行 <b>sql/auto_confirm_email.sql</b>（推荐，一劳永逸）。<br>' +
-        '详见 docs/Supabase控制台操作指南.md 第 5 节。</span>';
+        t('login.verifyAdmin') + '</span>';
       el.classList.remove('hidden');
     }
 
     async function resendMail() {
-      if (!lastMail) { WineApp.toast('请先填写邮箱', 'error'); return; }
+      if (!lastMail) { WineApp.toast(t('login.needEmail'), 'error'); return; }
       var res = await WineApp.resendConfirm(lastMail);
-      if (res.error) { WineApp.toast('发送失败：' + res.error.message, 'error'); return; }
-      WineApp.toast('验证邮件已重新发送，请查收', 'success');
+      if (res.error) { WineApp.toast(t('common.sendErr', { msg: res.error.message }), 'error'); return; }
+      WineApp.toast(t('login.resendOk'), 'success');
     }
 
     function afterLogin(role) {
@@ -158,7 +165,7 @@
 
     async function doLogin(e) {
       e.preventDefault();
-      if (!WineApp.sb) { WineApp.toast('请先配置 js/config.js 的密钥', 'error'); return; }
+      if (!WineApp.sb) { WineApp.toast(t('common.configFirst'), 'error'); return; }
       document.getElementById('loginHint').classList.add('hidden');
       lastMail = val('liEmail');
       var res = await WineApp.sb.auth.signInWithPassword({
@@ -168,20 +175,20 @@
       if (res.error) {
         if (WineApp.isUnconfirmedError(res.error)) {
           showVerifyHint('loginHint', val('liEmail'));
-          WineApp.toast('该邮箱还没验证，请先完成邮箱验证', 'error');
+          WineApp.toast(t('login.unverified'), 'error');
         } else {
-          WineApp.toast('登录失败：' + res.error.message, 'error');
+          WineApp.toast(t('login.loginFail', { msg: res.error.message }), 'error');
         }
         return;
       }
-      WineApp.toast('登录成功', 'success');
+      WineApp.toast(t('login.loginOk'), 'success');
       var p = await WineApp.currentProfile(true);
       afterLogin(p ? p.role : 'buyer');
     }
 
     async function doRegister(e) {
       e.preventDefault();
-      if (!WineApp.sb) { WineApp.toast('请先配置 js/config.js 的密钥', 'error'); return; }
+      if (!WineApp.sb) { WineApp.toast(t('common.configFirst'), 'error'); return; }
 
       var role = document.querySelector('input[name=regRole]:checked').value;
       var company = val('rgCompany');
@@ -189,12 +196,12 @@
       var pwd = val('rgPassword');
 
       if (role === 'supplier' && !company) {
-        WineApp.toast('供应商必须填写公司名称', 'error');
+        WineApp.toast(t('login.needCompany'), 'error');
         return;
       }
-      if (pwd.length < 6) { WineApp.toast('密码至少 6 位', 'error'); return; }
-      if (pwd !== val('rgConfirm')) { WineApp.toast('两次密码不一致', 'error'); return; }
-      if (email.indexOf('@') === -1) { WineApp.toast('邮箱格式不正确', 'error'); return; }
+      if (pwd.length < 6) { WineApp.toast(t('login.pwdShort'), 'error'); return; }
+      if (pwd !== val('rgConfirm')) { WineApp.toast(t('login.pwdMismatch'), 'error'); return; }
+      if (email.indexOf('@') === -1) { WineApp.toast(t('login.emailBad'), 'error'); return; }
 
       var res = await WineApp.sb.auth.signUp({
         email: email,
@@ -208,10 +215,10 @@
           },
         },
       });
-      if (res.error) { WineApp.toast('注册失败：' + res.error.message, 'error'); return; }
+      if (res.error) { WineApp.toast(t('login.registerFail', { msg: res.error.message }), 'error'); return; }
 
       if (res.data && res.data.session) {
-        WineApp.toast('注册成功，欢迎加入酒链！', 'success');
+        WineApp.toast(t('login.registerOk'), 'success');
         afterLogin(role);
       } else {
         // 没有 session = Supabase 要求先验证邮箱。
@@ -219,15 +226,22 @@
         // sql/auto_confirm_email.sql 自动确认，这里会直接登录成功进站。
         var retry = await WineApp.sb.auth.signInWithPassword({ email: email, password: pwd });
         if (!retry.error && retry.data && retry.data.session) {
-          WineApp.toast('注册成功，欢迎加入酒链！', 'success');
+          WineApp.toast(t('login.registerOk'), 'success');
           var p2 = await WineApp.currentProfile(true);
           afterLogin(p2 ? p2.role : role);
           return;
         }
         showVerifyHint('mailHint', email);
-        WineApp.toast('注册成功，请先完成邮箱验证', 'success');
+        WineApp.toast(t('login.registerOkVerify'), 'success');
       }
     }
+
+    WineApp.onLangChange(function () {
+      if (verifyState) {
+        var el = document.getElementById(verifyState.c);
+        if (el && !el.classList.contains('hidden')) showVerifyHint(verifyState.c, verifyState.e);
+      }
+    });
 
     WineApp.initNav();
   </script>
