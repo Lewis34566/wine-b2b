@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-page="home">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>酒款大厅 - 酒链 B2B</title>
+  <meta name="description" id="metaDesc" content="酒款大厅：搜索、筛选烟台产区在售葡萄酒，游客即可浏览" />
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -13,46 +15,51 @@
   <header class="topbar">
     <a class="brand" href="home.html">酒链<span>B2B</span></a>
     <nav class="topnav">
-      <a href="home.html" class="active">酒款大厅</a>
-      <a id="navDash" href="buyer-dashboard.html">我的后台</a>
-      <a href="messages.html">消息</a>
-      <a href="profile.html">资料</a>
+      <a href="home.html" class="active" data-i18n="nav.hall">酒款大厅</a>
+      <a id="navDash" href="buyer-dashboard.html" data-i18n="nav.dash">我的后台</a>
+      <a href="messages.html" data-i18n="nav.msgs">消息</a>
+      <a href="profile.html" data-i18n="nav.profile">资料</a>
     </nav>
     <div class="topbar-user">
+      <select data-lang-switch class="lang-switch" onchange="WineApp.setLang(this.value)">
+        <option value="zh">中文</option>
+        <option value="en">English</option>
+        <option value="ru">Русский</option>
+      </select>
       <span id="navUser" class="nav-user"></span>
-      <a id="navLogin" class="btn btn-sm btn-primary hidden" href="login.html">登录</a>
-      <button id="navLogout" class="btn btn-sm btn-ghost hidden" onclick="WineApp.logout()">退出</button>
+      <a id="navLogin" class="btn btn-sm btn-primary hidden" href="login.html" data-i18n="nav.login">登录</a>
+      <button id="navLogout" class="btn btn-sm btn-ghost hidden" onclick="WineApp.logout()" data-i18n="nav.logout">退出</button>
     </div>
   </header>
 
   <main class="page">
     <div class="page-head">
-      <h1>酒款大厅</h1>
-      <p id="wineCount" class="page-sub">加载中…</p>
+      <h1 data-i18n="nav.hall">酒款大厅</h1>
+      <p id="wineCount" class="page-sub" data-i18n="common.loading">加载中…</p>
     </div>
 
     <div class="filters">
       <input id="searchInput" class="filter-search" type="search"
-             placeholder="🔍 搜索酒名 / 产地 / 品种…" oninput="applyFilters()">
-      <select id="fOrigin" onchange="applyFilters()"><option value="">全部产地</option></select>
-      <select id="fVintage" onchange="applyFilters()"><option value="">全部年份</option></select>
-      <select id="fVariety" onchange="applyFilters()"><option value="">全部品种</option></select>
+             placeholder="🔍 搜索酒名 / 产地 / 品种…" data-i18n-ph="home.searchPh" oninput="applyFilters()">
+      <select id="fOrigin" onchange="applyFilters()"><option value="" data-i18n="home.fOrigin">全部产地</option></select>
+      <select id="fVintage" onchange="applyFilters()"><option value="" data-i18n="home.fVintage">全部年份</option></select>
+      <select id="fVariety" onchange="applyFilters()"><option value="" data-i18n="home.fVariety">全部品种</option></select>
       <select id="fPrice" onchange="applyFilters()">
-        <option value="">全部价格</option>
-        <option value="0-100">100 元以下</option>
-        <option value="100-300">100 – 300 元</option>
-        <option value="300-1000">300 – 1000 元</option>
-        <option value="1000-">1000 元以上</option>
+        <option value="" data-i18n="home.fPrice">全部价格</option>
+        <option value="0-100" data-i18n="home.price0_100">100 元以下</option>
+        <option value="100-300" data-i18n="home.price100_300">100 – 300 元</option>
+        <option value="300-1000" data-i18n="home.price300_1000">300 – 1000 元</option>
+        <option value="1000-" data-i18n="home.price1000">1000 元以上</option>
       </select>
-      <button class="btn btn-sm btn-ghost" onclick="resetFilters()">重置</button>
+      <button class="btn btn-sm btn-ghost" onclick="resetFilters()" data-i18n="home.reset">重置</button>
     </div>
 
     <div id="wineGrid" class="wine-grid"></div>
 
     <div id="emptyState" class="empty hidden">
       <div class="empty-icon">🍷</div>
-      <p>没有找到符合条件的酒款</p>
-      <a class="btn btn-primary" href="login.html">注册成为供应商，发布第一款酒</a>
+      <p data-i18n="home.empty">没有找到符合条件的酒款</p>
+      <a class="btn btn-primary" href="login.html" data-i18n="home.emptyCta">注册成为供应商，发布第一款酒</a>
     </div>
   </main>
 
@@ -61,16 +68,19 @@
   <script src="js/vendor-supabase.js"></script>
   <script src="js/config.js"></script>
   <script src="js/supabase.js"></script>
+  <script src="js/i18n.js"></script>
   <script>
     /* ---------- 页面逻辑：酒款大厅 ---------- */
 
     var allWines = [];
+    var loaded = false;
     var esc = WineApp.escapeHtml;
     var fmtMoney = WineApp.fmtMoney;
+    var t = WineApp.t;
 
     async function init() {
       WineApp.initNav();
-      if (!WineApp.sb) { WineApp.toast('请先配置 js/config.js 的密钥', 'error'); return; }
+      if (!WineApp.sb) { WineApp.toast(t('common.configFirst'), 'error'); return; }
       await loadWines();
     }
 
@@ -80,18 +90,31 @@
         .eq('status', 'on_sale')
         .order('created_at', { ascending: false })
         .limit(500);
-      if (res.error) { WineApp.toast('加载酒款失败：' + res.error.message, 'error'); return; }
+      if (res.error) { WineApp.toast(t('common.loadErr', { msg: res.error.message }), 'error'); return; }
       allWines = res.data || [];
+      loaded = true;
       buildFilters();
       applyFilters();
+    }
+
+    /* 字典外的产地/品种：i18n.js 会回退成 "origin.XXX" / "variety.XXX" 这种 key 文本，
+       这里再兜一层，显示原始存储值（对应 i18n.js 注释声明的「fallback → 原文」） */
+    function originText(v) {
+      var s = WineApp.originLabel(v);
+      return s.indexOf('origin.') === 0 ? v : s;
+    }
+    function varietyText(v) {
+      var s = WineApp.varietyLabel(v);
+      return s.indexOf('variety.') === 0 ? v : s;
     }
 
     function fillSelect(id, values, placeholder) {
       var el = document.getElementById(id);
       var current = el.value;
+      var label = id === 'fOrigin' ? originText : (id === 'fVariety' ? varietyText : function (v) { return v; });
       var html = '<option value="">' + placeholder + '</option>';
       values.forEach(function (v) {
-        html += '<option value="' + esc(v) + '">' + esc(v) + '</option>';
+        html += '<option value="' + esc(v) + '">' + esc(label(v)) + '</option>';
       });
       el.innerHTML = html;
       el.value = current;
@@ -104,9 +127,9 @@
         if (w.vintage) vintages[w.vintage] = 1;
         if (w.variety) varieties[w.variety] = 1;
       });
-      fillSelect('fOrigin', Object.keys(origins).sort(), '全部产地');
-      fillSelect('fVintage', Object.keys(vintages).sort(function (a, b) { return b - a; }), '全部年份');
-      fillSelect('fVariety', Object.keys(varieties).sort(), '全部品种');
+      fillSelect('fOrigin', Object.keys(origins).sort(), t('home.fOrigin'));
+      fillSelect('fVintage', Object.keys(vintages).sort(function (a, b) { return b - a; }), t('home.fVintage'));
+      fillSelect('fVariety', Object.keys(varieties).sort(), t('home.fVariety'));
     }
 
     function inPriceBand(price, band) {
@@ -131,7 +154,7 @@
         if (variety && w.variety !== variety) return false;
         if (!inPriceBand(w.price, band)) return false;
         if (kw) {
-          var hay = (w.name + ' ' + (w.origin || '') + ' ' + (w.variety || '') + ' ' + (w.wine_type || '')).toLowerCase();
+          var hay = (w.name + ' ' + (w.name_en || '') + ' ' + (w.name_ru || '') + ' ' + WineApp.wineName(w) + ' ' + WineApp.originLabel(w.origin) + ' ' + WineApp.varietyLabel(w.variety) + ' ' + WineApp.wineTypeLabel(w.wine_type) + ' ' + (w.origin || '') + ' ' + (w.variety || '')).toLowerCase();
           if (hay.indexOf(kw) === -1) return false;
         }
         return true;
@@ -141,21 +164,23 @@
     }
 
     function render(list) {
-      document.getElementById('wineCount').textContent = '共 ' + list.length + ' 款在售';
+      document.getElementById('wineCount').textContent = t('home.count', { n: list.length });
       document.getElementById('emptyState').classList.toggle('hidden', list.length > 0);
       document.getElementById('wineGrid').innerHTML = list.map(function (w) {
-        var icon = w.wine_type === '起泡酒' ? '🥂' : (w.wine_type === '白葡萄酒' ? '🥂' : '🍷');
-        var meta = (w.origin || '产地未填') + (w.vintage ? ' · ' + w.vintage + ' 年' : '') + (w.variety ? ' · ' + esc(w.variety) : '');
+        var icon = WineApp.wineIcon(w.wine_type);
+        var meta = (originText(w.origin) || t('home.originEmpty'))
+          + (w.vintage ? ' · ' + t('common.yearSuffix', { n: w.vintage }) : '')
+          + (w.variety ? ' · ' + esc(varietyText(w.variety)) : '');
         return '<div class="wine-card" onclick="goDetail(\'' + w.id + '\')">'
           + '<div class="wine-card-img"><span>' + icon + '</span>'
-          + (Number(w.stock) <= 0 ? '<em class="soldout">已售罄</em>' : '')
+          + (Number(w.stock) <= 0 ? '<em class="soldout">' + t('common.soldout') + '</em>' : '')
           + '</div>'
           + '<div class="wine-card-body">'
-          + '<h3>' + esc(w.name) + '</h3>'
+          + '<h3>' + esc(WineApp.wineName(w)) + '</h3>'
           + '<p class="wine-card-meta">' + esc(meta) + '</p>'
           + '<div class="wine-card-foot">'
           + '<span class="price">' + fmtMoney(w.price) + '</span>'
-          + '<span class="stock">库存 ' + w.stock + ' 瓶</span>'
+          + '<span class="stock">' + t('common.stock', { n: w.stock }) + '</span>'
           + '</div>'
           + '<p class="wine-card-supplier">' + esc(w.supplier ? w.supplier.company_name || '' : '') + '</p>'
           + '</div></div>';
@@ -171,6 +196,10 @@
       });
       applyFilters();
     }
+
+    WineApp.onLangChange(function () {
+      if (loaded) { buildFilters(); applyFilters(); }
+    });
 
     init();
   </script>

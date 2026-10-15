@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-page="product">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>酒款详情 - 酒链 B2B</title>
+  <meta name="description" id="metaDesc" content="酒款详情：价格、库存、供应商联系方式，登录后可询价下单" />
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -13,22 +15,27 @@
   <header class="topbar">
     <a class="brand" href="home.html">酒链<span>B2B</span></a>
     <nav class="topnav">
-      <a href="home.html">酒款大厅</a>
-      <a id="navDash" href="buyer-dashboard.html">我的后台</a>
-      <a href="messages.html">消息</a>
-      <a href="profile.html">资料</a>
+      <a href="home.html" data-i18n="nav.hall">酒款大厅</a>
+      <a id="navDash" href="buyer-dashboard.html" data-i18n="nav.dash">我的后台</a>
+      <a href="messages.html" data-i18n="nav.msgs">消息</a>
+      <a href="profile.html" data-i18n="nav.profile">资料</a>
     </nav>
     <div class="topbar-user">
+      <select data-lang-switch class="lang-switch" onchange="WineApp.setLang(this.value)">
+        <option value="zh">中文</option>
+        <option value="en">English</option>
+        <option value="ru">Русский</option>
+      </select>
       <span id="navUser" class="nav-user"></span>
-      <a id="navLogin" class="btn btn-sm btn-primary hidden" href="login.html">登录</a>
-      <button id="navLogout" class="btn btn-sm btn-ghost hidden" onclick="WineApp.logout()">退出</button>
+      <a id="navLogin" class="btn btn-sm btn-primary hidden" href="login.html" data-i18n="nav.login">登录</a>
+      <button id="navLogout" class="btn btn-sm btn-ghost hidden" onclick="WineApp.logout()" data-i18n="nav.logout">退出</button>
     </div>
   </header>
 
   <main>
     <div class="detail-hero" id="detailHero"><span>🍷</span></div>
     <div class="detail-body">
-      <h1 id="wName">加载中…</h1>
+      <h1 id="wName" data-i18n="common.loading">加载中…</h1>
       <div class="detail-meta" id="wMeta"></div>
       <div class="detail-price-row">
         <span class="price-lg" id="wPrice">–</span>
@@ -40,25 +47,25 @@
   </main>
 
   <div class="bottom-bar" id="actionBar">
-    <button class="btn btn-ghost flex1" onclick="openInquirySheet()">立即询价</button>
-    <button class="btn btn-primary flex1" id="orderBtn" onclick="openOrderSheet()">立即下单</button>
+    <button type="button" class="btn btn-ghost flex1" onclick="openInquirySheet()" data-i18n="product.inquiry">立即询价</button>
+    <button type="button" class="btn btn-primary flex1" id="orderBtn" onclick="openOrderSheet()" data-i18n="product.order">立即下单</button>
   </div>
 
   <!-- 询价弹层 -->
   <div class="sheet-mask" id="inquirySheet">
     <div class="sheet">
       <div class="sheet-head">
-        <h3>向供应商询价</h3>
-        <button class="sheet-close" onclick="WineApp.closeSheet('inquirySheet')">✕</button>
+        <h3 data-i18n="product.inqTitle">向供应商询价</h3>
+        <button type="button" class="sheet-close" onclick="WineApp.closeSheet('inquirySheet')">✕</button>
       </div>
       <div class="sheet-body">
-        <label>留言（采购数量、目标价、物流要求…）
-          <textarea id="inquiryMsg" rows="4" placeholder="例如：想采购 50 箱，请报含税到岸价"></textarea>
+        <label><span data-i18n="product.inqMsg">留言（采购数量、目标价、物流要求…）</span>
+          <textarea id="inquiryMsg" rows="4" placeholder="例如：想采购 50 箱，请报含税到岸价" data-i18n-ph="product.inqMsgPh"></textarea>
         </label>
-        <label>期望单价（元/瓶，选填）
-          <input type="number" id="inquiryPrice" min="0" step="0.01" placeholder="例如 45.00">
+        <label><span data-i18n="product.inqPrice">期望单价（元/瓶，选填）</span>
+          <input type="number" id="inquiryPrice" min="0" step="0.01" placeholder="例如 45.00" data-i18n-ph="product.inqPricePh">
         </label>
-        <button class="btn btn-primary btn-block" onclick="submitInquiry()">发送询价</button>
+        <button type="button" class="btn btn-primary btn-block" onclick="submitInquiry()" data-i18n="product.inqSend">发送询价</button>
       </div>
     </div>
   </div>
@@ -67,25 +74,25 @@
   <div class="sheet-mask" id="orderSheet">
     <div class="sheet">
       <div class="sheet-head">
-        <h3>确认下单</h3>
-        <button class="sheet-close" onclick="WineApp.closeSheet('orderSheet')">✕</button>
+        <h3 data-i18n="product.orderTitle">确认下单</h3>
+        <button type="button" class="sheet-close" onclick="WineApp.closeSheet('orderSheet')">✕</button>
       </div>
       <div class="sheet-body">
         <div class="qty-row">
-          <button class="qty-btn" onclick="changeQty(-1)">−</button>
+          <button type="button" class="qty-btn" onclick="changeQty(-1)">−</button>
           <input class="qty-val" id="orderQty" readonly>
-          <button class="qty-btn" onclick="changeQty(1)">＋</button>
-          <span class="stock">库存 <span id="orderStock">0</span> 瓶</span>
+          <button type="button" class="qty-btn" onclick="changeQty(1)">＋</button>
+          <span class="stock"><span data-i18n="common.stockPrefix">库存 </span><span id="orderStock">0</span><span data-i18n="common.stockUnit"> 瓶</span></span>
         </div>
         <div class="order-total-row">
-          <span>合计金额</span>
+          <span data-i18n="product.total">合计金额</span>
           <span class="order-total" id="orderTotal">¥0.00</span>
         </div>
-        <label>备注（选填）
-          <input type="text" id="orderRemark" placeholder="例如：发江西南昌，走物流">
+        <label><span data-i18n="product.remark">备注（选填）</span>
+          <input type="text" id="orderRemark" placeholder="例如：发江西南昌，走物流" data-i18n-ph="product.remarkPh">
         </label>
-        <button class="btn btn-primary btn-block" onclick="submitOrder()">提交订单</button>
-        <p class="auth-tip">下单后供应商确认，确认时扣减库存</p>
+        <button type="button" class="btn btn-primary btn-block" onclick="submitOrder()" data-i18n="product.orderSubmit">提交订单</button>
+        <p class="auth-tip" data-i18n="product.orderTip">下单后供应商确认，确认时扣减库存</p>
       </div>
     </div>
   </div>
@@ -95,13 +102,27 @@
   <script src="js/vendor-supabase.js"></script>
   <script src="js/config.js"></script>
   <script src="js/supabase.js"></script>
+  <script src="js/i18n.js"></script>
   <script>
     /* ---------- 页面逻辑：酒款详情 ---------- */
 
     var wine = null;
     var qty = 1;
+    var isOwner = false;
     var esc = WineApp.escapeHtml;
     var fmtMoney = WineApp.fmtMoney;
+    var t = WineApp.t;
+
+    /* 字典外的产地/品种：i18n.js 会回退成 "origin.XXX" / "variety.XXX" 这种 key 文本，
+       这里再兜一层，显示原始存储值（对应 i18n.js 注释声明的「fallback → 原文」） */
+    function originText(v) {
+      var s = WineApp.originLabel(v);
+      return s.indexOf('origin.') === 0 ? v : s;
+    }
+    function varietyText(v) {
+      var s = WineApp.varietyLabel(v);
+      return s.indexOf('variety.') === 0 ? v : s;
+    }
 
     async function init() {
       WineApp.initNav();
@@ -114,7 +135,7 @@
         .maybeSingle();
 
       if (res.error || !res.data) {
-        WineApp.toast('酒款不存在或已下架', 'error');
+        WineApp.toast(t('product.notFound'), 'error');
         location.href = 'home.html';
         return;
       }
@@ -123,54 +144,67 @@
 
       // 供应商看自己的酒款：不显示询价/下单
       var p = await WineApp.currentProfile();
-      if (p && p.role === 'supplier' && p.id === wine.supplier_id) {
-        document.getElementById('actionBar').innerHTML =
-          '<a class="btn btn-primary flex1" href="supplier-dashboard.html">这是我发布的酒款 · 去后台管理</a>';
-      }
+      isOwner = !!(p && p.role === 'supplier' && p.id === wine.supplier_id);
+      renderActionBar();
     }
 
     function render() {
-      var icon = wine.wine_type === '起泡酒' ? '🥂' : (wine.wine_type === '白葡萄酒' ? '🥂' : '🍷');
+      var icon = WineApp.wineIcon(wine.wine_type);
       document.getElementById('detailHero').innerHTML = '<span>' + icon + '</span>';
-      document.getElementById('wName').textContent = wine.name;
+      document.getElementById('wName').textContent = WineApp.wineName(wine);
 
       var chips = '';
-      if (wine.origin) chips += '<span class="chip chip-info">产地：' + esc(wine.origin) + '</span>';
-      if (wine.vintage) chips += '<span class="chip chip-gold">' + wine.vintage + ' 年</span>';
-      if (wine.variety) chips += '<span class="chip chip-ok">' + esc(wine.variety) + '</span>';
-      if (wine.wine_type) chips += '<span class="chip chip-gray">' + esc(wine.wine_type) + '</span>';
+      if (wine.origin) chips += '<span class="chip chip-info">' + esc(t('product.originChip', { o: originText(wine.origin) })) + '</span>';
+      if (wine.vintage) chips += '<span class="chip chip-gold">' + esc(t('common.yearSuffix', { n: wine.vintage })) + '</span>';
+      if (wine.variety) chips += '<span class="chip chip-ok">' + esc(varietyText(wine.variety)) + '</span>';
+      if (wine.wine_type) chips += '<span class="chip chip-gray">' + esc(WineApp.wineTypeLabel(wine.wine_type)) + '</span>';
       document.getElementById('wMeta').innerHTML = chips;
 
       document.getElementById('wPrice').textContent = fmtMoney(wine.price);
-      document.getElementById('wStock').textContent = '库存 ' + wine.stock + ' 瓶';
-      document.getElementById('wDesc').textContent = wine.description || '暂无描述';
+      document.getElementById('wStock').textContent = t('common.stock', { n: wine.stock });
+      document.getElementById('wDesc').textContent = WineApp.wineDesc(wine) || t('common.noDesc');
 
       var s = wine.supplier || {};
       document.getElementById('wSupplier').innerHTML =
-        '<h3>🍇 供应商：' + esc(s.company_name || '未填写') + '</h3>'
-        + '<p>联系人：' + esc(s.contact_name || '—') + '　电话：' + esc(s.phone || '—') + '</p>'
-        + (s.region ? '<p>地区：' + esc(s.region) + '</p>' : '');
+        '<h3>' + esc(t('product.supplierTitle', { c: s.company_name || t('common.none') })) + '</h3>'
+        + '<p>' + esc(t('product.contactLine', { c: s.contact_name || t('common.none'), p: s.phone || t('common.none') })) + '</p>'
+        + (s.region ? '<p>' + esc(t('product.regionLine', { r: s.region })) + '</p>' : '');
 
       document.getElementById('orderStock').textContent = wine.stock;
       updateOrderUI();
 
-      if (Number(wine.stock) <= 0) {
-        var btn = document.getElementById('orderBtn');
-        btn.textContent = '已售罄';
+      var btn = document.getElementById('orderBtn');
+      if (btn && Number(wine.stock) <= 0) {
+        btn.textContent = t('product.soldoutBtn');
         btn.disabled = true;
       }
+    }
+
+    /* 底部操作栏：酒款作者看「去后台管理」，其余人看询价/下单（售罄则按钮置灰） */
+    function renderActionBar() {
+      var bar = document.getElementById('actionBar');
+      if (isOwner) {
+        bar.innerHTML = '<a class="btn btn-primary flex1" href="supplier-dashboard.html">' + t('product.ownWine') + '</a>';
+        return;
+      }
+      var soldout = Number(wine && wine.stock) <= 0;
+      bar.innerHTML =
+        '<button type="button" class="btn btn-ghost flex1" onclick="openInquirySheet()">' + t('product.inquiry') + '</button>'
+        + '<button type="button" class="btn btn-primary flex1" id="orderBtn" onclick="openOrderSheet()"' + (soldout ? ' disabled' : '') + '>'
+        + t(soldout ? 'product.soldoutBtn' : 'product.order')
+        + '</button>';
     }
 
     async function guardBuyer() {
       var user = await WineApp.currentUser();
       if (!user) {
-        WineApp.toast('请先登录（访客只能浏览，不能下单）', 'info');
+        WineApp.toast(t('product.needLogin'), 'info');
         WineApp.redirectToLogin();
         return false;
       }
       var p = await WineApp.currentProfile();
       if (p.role === 'supplier') {
-        WineApp.toast('供应商账号不能询价/下单，请用采购商账号', 'error');
+        WineApp.toast(t('product.supplierForbidden'), 'error');
         return false;
       }
       return true;
@@ -186,7 +220,7 @@
       var user = await WineApp.currentUser();
       var message = document.getElementById('inquiryMsg').value.trim();
       var priceStr = document.getElementById('inquiryPrice').value.trim();
-      if (!message) { WineApp.toast('请填写留言', 'error'); return; }
+      if (!message) { WineApp.toast(t('product.needMsg'), 'error'); return; }
 
       var res = await WineApp.sb.from('inquiries').insert({
         wine_id: wine.id,
@@ -194,16 +228,16 @@
         message: message,
         expected_price: priceStr ? Number(priceStr) : null,
       });
-      if (res.error) { WineApp.toast('发送失败：' + res.error.message, 'error'); return; }
+      if (res.error) { WineApp.toast(t('product.inquiryFail', { msg: res.error.message }), 'error'); return; }
 
       WineApp.closeSheet('inquirySheet');
       document.getElementById('inquiryMsg').value = '';
       document.getElementById('inquiryPrice').value = '';
-      WineApp.toast('询价已发送，供应商回复后可在「我的询价」查看', 'success');
+      WineApp.toast(t('product.inquirySent'), 'success');
     }
 
     async function openOrderSheet() {
-      if (Number(wine.stock) <= 0) { WineApp.toast('该酒款已售罄', 'error'); return; }
+      if (Number(wine.stock) <= 0) { WineApp.toast(t('product.soldoutErr'), 'error'); return; }
       if (!(await guardBuyer())) return;
       qty = 1;
       updateOrderUI();
@@ -232,14 +266,18 @@
         remark: remark,
       }).select();
 
-      if (res.error) { WineApp.toast('下单失败：' + res.error.message, 'error'); return; }
+      if (res.error) { WineApp.toast(t('product.orderFail', { msg: res.error.message }), 'error'); return; }
 
       // 数据库触发器回填单价与总额（数据库是金额的唯一真相）
       var total = res.data && res.data[0] ? res.data[0].total_amount : 0;
       WineApp.closeSheet('orderSheet');
-      WineApp.toast('下单成功，合计 ' + fmtMoney(total) + '，等待供应商确认', 'success');
+      WineApp.toast(t('product.orderOk', { total: fmtMoney(total) }), 'success');
       setTimeout(function () { location.href = 'buyer-dashboard.html'; }, 1200);
     }
+
+    WineApp.onLangChange(function () {
+      if (wine) { render(); renderActionBar(); }
+    });
 
     init();
   </script>
