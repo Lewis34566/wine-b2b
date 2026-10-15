@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>采购商后台 - 酒链 B2B</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <div id="configAlert" class="config-alert hidden">⚠️ Supabase 密钥还没填：打开 <code>js/config.js</code>，把第 10、13 行的占位符换成你自己的值（步骤见 <code>docs/Supabase控制台操作指南.md</code>）</div>
+
+  <header class="topbar">
+    <a class="brand" href="home.html">酒链<span>B2B</span></a>
+    <nav class="topnav">
+      <a href="home.html">酒款大厅</a>
+      <a id="navDash" href="buyer-dashboard.html" class="active">我的后台</a>
+      <a href="messages.html">消息</a>
+      <a href="profile.html">资料</a>
+    </nav>
+    <div class="topbar-user">
+      <span id="navUser" class="nav-user"></span>
+      <a id="navLogin" class="btn btn-sm btn-primary hidden" href="login.html">登录</a>
+      <button id="navLogout" class="btn btn-sm btn-ghost hidden" onclick="WineApp.logout()">退出</button>
+    </div>
+  </header>
+
+  <main class="page">
+    <div class="page-head">
+      <h1>采购商后台</h1>
+      <p class="page-sub">跟进你的询价与订单</p>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-card"><div class="stat-num" id="statOrders">–</div><div class="stat-label">订单数</div></div>
+      <div class="stat-card"><div class="stat-num" id="statSpend">–</div><div class="stat-label">累计金额</div></div>
+      <div class="stat-card"><div class="stat-num" id="statPending">–</div><div class="stat-label">待收货</div></div>
+    </div>
+
+    <div class="tabs">
+      <button class="tab active" data-tab="inquiries" onclick="switchTab('inquiries')">我的询价</button>
+      <button class="tab" data-tab="orders" onclick="switchTab('orders')">我的订单</button>
+    </div>
+
+    <section id="tab-inquiries" class="tab-panel">
+      <div id="inquiryList" class="card-list"></div>
+    </section>
+
+    <section id="tab-orders" class="tab-panel hidden">
+      <div id="orderList" class="card-list"></div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="js/vendor-supabase.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script>
+    /* ---------- 页面逻辑：采购商后台 ---------- */
+
+    var me = null;
+    var tabLoaded = { inquiries: false, orders: false };
+    var esc = WineApp.escapeHtml;
+    var fmtMoney = WineApp.fmtMoney;
+    var fmtDate = WineApp.fmtDate;
+
+    async function init() {
+      WineApp.initNav();
+      me = await WineApp.requireAuth();
+      if (!me) return;
+      var p = await WineApp.currentProfile();
+      if (p.role !== 'buyer') {
+        WineApp.toast('当前账号是供应商，请使用供应商后台', 'error');
+        setTimeout(function () { location.href = 'supplier-dashboard.html'; }, 900);
+        return;
+      }
+      switchTab('inquiries');
+    }
+
+    function switchTab(tab) {
+      document.querySelectorAll('.tab').forEach(function (b) {
+        b.classList.toggle('active', b.dataset.tab === tab);
+      });
+      document.querySelectorAll('.tab-panel').forEach(function (p) { p.classList.add('hidden'); });
+      document.getElementById('tab-' + tab).classList.remove('hidden');
+      if (tab === 'inquiries' && !tabLoaded.inquiries) { tabLoaded.inquiries = true; loadInquiries(); }
+      if (tab === 'orders' && !tabLoaded.orders) { tabLoaded.orders = true; loadOrders(); }
+    }
+
+    /* ---------- 我的询价 ---------- */
+
+    async function loadInquiries() {
+      var res = await WineApp.sb.from('inquiries')
+        .select('*, wines:public!inquiries_wine_id_fkey(name, origin, vintage, supplier_id)')
+        .eq('buyer_id', me.id)
+        .order('created_at', { ascending: false });
+      if (res.error) { WineApp.toast('加载询价失败：' + res.error.message, 'error'); return; }
+
+      var list = res.data || [];
+      var supplierIds = Array.from(new Set(list.map(function (q) { return q.wines ? q.wines.supplier_id : null; }).filter(Boolean)));
+      var suppliers = {};
+      if (supplierIds.length) {
+        var res2 = await WineApp.sb.from('profiles')
+          .select('id, company_name, contact_name, phone')
+          .in('id', supplierIds);
+        (res2.data || []).forEach(function (p) { suppliers[p.id] = p; });
+      }
+
+      document.getElementById('inquiryList').innerHTML = list.map(function (q) {
+        var w = q.wines || {};
+        var s = suppliers[w.supplier_id] || {};
+        var replied = q.status === 'replied';
+        return '<div class="list-card">'
+          + '<div class="list-card-title">《' + esc(w.name || '') + '》' + WineApp.inquiryChip(q.status) + '</div>'
+          + '<div class="list-card-meta">'
+          + '<p>供应商：' + esc(s.company_name || '—') + '（' + esc(s.contact_name || '—') + '）</p>'
+          + '<p>我的留言：' + esc(q.message || '—') + '</p>'
+          + (q.expected_price != null ? '<p>期望单价：' + fmtMoney(q.expected_price) + '</p>' : '')
+          + '<p>时间：' + fmtDate(q.created_at) + '</p>'
+          + '</div>'
+          + (replied
+            ? '<div class="inq-reply-box" style="background:var(--wine-soft);border-radius:10px;padding:10px 12px">'
+              + '<strong style="font-size:13px;color:var(--wine)">供应商回复（' + fmtDate(q.replied_at) + '）：</strong>'
+              + '<p style="margin-top:4px;white-space:pre-wrap">' + esc(q.reply || '') + '</p></div>'
+            : '<p class="page-sub">⏳ 等待供应商回复…</p>')
+          + '</div>';
+      }).join('') || '<div class="empty"><div class="empty-icon">📩</div><p>还没有询价。<a href="home.html" style="color:var(--wine);font-weight:600">去酒款大厅</a> 挑一款问问价吧。</p></div>';
+    }
+
+    /* ---------- 我的订单 ---------- */
+
+    async function loadOrders() {
+      var res = await WineApp.sb.from('orders')
+        .select('*, wines:public!orders_wine_id_fkey(name), supplier:public!orders_supplier_id_fkey(company_name, contact_name)')
+        .eq('buyer_id', me.id)
+        .order('created_at', { ascending: false });
+      if (res.error) { WineApp.toast('加载订单失败：' + res.error.message, 'error'); return; }
+
+      var list = res.data || [];
+      var active = list.filter(function (o) { return o.status !== 'cancelled'; });
+      var spend = active.reduce(function (sum, o) { return sum + Number(o.total_amount); }, 0);
+      var pending = active.filter(function (o) { return o.status === 'shipped'; }).length;
+
+      document.getElementById('statOrders').textContent = active.length;
+      document.getElementById('statSpend').textContent = fmtMoney(spend);
+      document.getElementById('statPending').textContent = pending;
+
+      document.getElementById('orderList').innerHTML = list.map(function (o) {
+        var w = o.wines || {};
+        var s = o.supplier || {};
+        var actions = '';
+        if (o.status === 'pending_confirm') {
+          actions = '<button class="btn btn-sm btn-ghost" onclick="cancelOrder(\'' + o.id + '\')">取消订单</button>';
+        } else if (o.status === 'shipped') {
+          actions = '<button class="btn btn-sm btn-primary" onclick="setOrderStatus(\'' + o.id + '\', \'completed\')">确认收货</button>';
+        }
+        return '<div class="list-card">'
+          + '<div class="list-card-title">《' + esc(w.name || '') + '》' + WineApp.orderChip(o.status) + '</div>'
+          + '<div class="list-card-meta">'
+          + '<p>供应商：' + esc(s.company_name || '—') + '（' + esc(s.contact_name || '—') + '）</p>'
+          + '<p>' + o.quantity + ' 瓶 × ' + fmtMoney(o.unit_price) + ' ＝ <strong>' + fmtMoney(o.total_amount) + '</strong></p>'
+          + (o.remark ? '<p>备注：' + esc(o.remark) + '</p>' : '')
+          + '<p>下单：' + fmtDate(o.created_at) + ' · 更新：' + fmtDate(o.updated_at) + '</p>'
+          + '</div>'
+          + (actions ? '<div class="list-card-actions">' + actions + '</div>' : '')
+          + '</div>';
+      }).join('') || '<div class="empty"><div class="empty-icon">📦</div><p>还没有订单。<a href="home.html" style="color:var(--wine);font-weight:600">去酒款大厅</a> 下单吧。</p></div>';
+    }
+
+    async function setOrderStatus(id, status) {
+      var res = await WineApp.sb.from('orders').update({ status: status }).eq('id', id);
+      if (res.error) { WineApp.toast('操作失败：' + res.error.message, 'error'); return; }
+      WineApp.toast(status === 'completed' ? '已确认收货，交易完成 🎉' : '订单已取消', 'success');
+      loadOrders();
+    }
+
+    function cancelOrder(id) {
+      if (!confirm('确定取消该订单？取消后不可恢复。')) return;
+      setOrderStatus(id, 'cancelled');
+    }
+
+    init();
+  </script>
+</body>
+</html>

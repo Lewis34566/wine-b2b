@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>个人资料 - 酒链 B2B</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <div id="configAlert" class="config-alert hidden">⚠️ Supabase 密钥还没填：打开 <code>js/config.js</code>，把第 10、13 行的占位符换成你自己的值（步骤见 <code>docs/Supabase控制台操作指南.md</code>）</div>
+
+  <header class="topbar">
+    <a class="brand" href="home.html">酒链<span>B2B</span></a>
+    <nav class="topnav">
+      <a href="home.html">酒款大厅</a>
+      <a id="navDash" href="buyer-dashboard.html">我的后台</a>
+      <a href="messages.html">消息</a>
+      <a href="profile.html" class="active">资料</a>
+    </nav>
+    <div class="topbar-user">
+      <span id="navUser" class="nav-user"></span>
+      <a id="navLogin" class="btn btn-sm btn-primary hidden" href="login.html">登录</a>
+      <button id="navLogout" class="btn btn-sm btn-ghost hidden" onclick="WineApp.logout()">退出</button>
+    </div>
+  </header>
+
+  <main class="page page-narrow">
+    <div class="page-head">
+      <h1>个人资料</h1>
+      <p class="page-sub">你的账号信息与联系方式（对方会在询价/订单里看到）</p>
+    </div>
+
+    <div class="card form-card">
+      <div class="profile-ident">
+        <div class="avatar">🍷</div>
+        <div>
+          <div class="profile-email" id="pfEmail">–</div>
+          <div><span class="role-badge" id="pfRole">–</span></div>
+        </div>
+      </div>
+
+      <label>公司名称
+        <input type="text" id="pfCompany" placeholder="你的公司 / 店铺名称">
+      </label>
+      <div class="form-row">
+        <label>联系人
+          <input type="text" id="pfContact" placeholder="姓名">
+        </label>
+        <label>电话
+          <input type="tel" id="pfPhone" placeholder="手机 / 座机">
+        </label>
+      </div>
+      <label>所在地区
+        <input type="text" id="pfRegion" placeholder="例如：江西·南昌">
+      </label>
+      <label>简介
+        <textarea id="pfBio" rows="3" placeholder="一句话介绍你的货源或采购需求"></textarea>
+      </label>
+
+      <button class="btn btn-primary btn-block" onclick="saveProfile()">保存修改</button>
+      <button class="btn btn-ghost btn-block" onclick="WineApp.logout()">退出登录</button>
+    </div>
+  </main>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="js/vendor-supabase.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script>
+    /* ---------- 页面逻辑：个人资料 ---------- */
+
+    var me = null;
+
+    async function init() {
+      WineApp.initNav();
+      var user = await WineApp.requireAuth();
+      if (!user) return;
+      me = await WineApp.currentProfile();
+
+      document.getElementById('pfEmail').textContent = me.email || '';
+      var roleEl = document.getElementById('pfRole');
+      roleEl.textContent = me.role === 'supplier' ? '供应商' : '采购商';
+      roleEl.className = 'role-badge ' + (me.role === 'supplier' ? 'role-supplier' : 'role-buyer');
+
+      document.getElementById('pfCompany').value = me.company_name || '';
+      document.getElementById('pfContact').value = me.contact_name || '';
+      document.getElementById('pfPhone').value = me.phone || '';
+      document.getElementById('pfRegion').value = me.region || '';
+      document.getElementById('pfBio').value = me.bio || '';
+    }
+
+    function val(id) { return document.getElementById(id).value.trim(); }
+
+    async function saveProfile() {
+      var res = await WineApp.sb.from('profiles').update({
+        company_name: val('pfCompany'),
+        contact_name: val('pfContact'),
+        phone: val('pfPhone'),
+        region: val('pfRegion'),
+        bio: val('pfBio'),
+      }).eq('id', me.id);
+
+      if (res.error) { WineApp.toast('保存失败：' + res.error.message, 'error'); return; }
+      WineApp.toast('资料已保存', 'success');
+      WineApp.currentProfile(true).then(function () { WineApp.initNav(); });
+    }
+
+    init();
+  </script>
+</body>
+</html>

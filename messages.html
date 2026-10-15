@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>站内消息 - 酒链 B2B</title>
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <div id="configAlert" class="config-alert hidden">⚠️ Supabase 密钥还没填：打开 <code>js/config.js</code>，把第 10、13 行的占位符换成你自己的值（步骤见 <code>docs/Supabase控制台操作指南.md</code>）</div>
+
+  <header class="topbar">
+    <a class="brand" href="home.html">酒链<span>B2B</span></a>
+    <nav class="topnav">
+      <a href="home.html">酒款大厅</a>
+      <a id="navDash" href="buyer-dashboard.html">我的后台</a>
+      <a href="messages.html" class="active">消息</a>
+      <a href="profile.html">资料</a>
+    </nav>
+    <div class="topbar-user">
+      <span id="navUser" class="nav-user"></span>
+      <a id="navLogin" class="btn btn-sm btn-primary hidden" href="login.html">登录</a>
+      <button id="navLogout" class="btn btn-sm btn-ghost hidden" onclick="WineApp.logout()">退出</button>
+    </div>
+  </header>
+
+  <main class="chat-page">
+    <div class="chat-layout" id="chatLayout">
+      <aside class="conv-panel">
+        <div class="panel-toolbar" style="padding:14px 16px 8px;margin-bottom:0">
+          <h2 style="font-size:17px">会话</h2>
+          <button class="btn btn-sm btn-primary" onclick="openNewChat()">＋ 新会话</button>
+        </div>
+        <div id="convList" class="conv-list"></div>
+      </aside>
+
+      <section class="chat-main">
+        <div class="chat-empty" id="chatEmpty">
+          <div class="empty-icon">💬</div>
+          <p>选择左侧会话开始聊天<br>或点「新会话」找人直接谈</p>
+        </div>
+        <div class="chat-box hidden" id="chatBox">
+          <div class="chat-head">
+            <strong id="chatPeerName">–</strong>
+            <button class="btn btn-sm btn-ghost" onclick="backToConvs()">← 返回列表</button>
+          </div>
+          <div class="chat-msgs" id="chatMsgs"></div>
+          <div class="chat-input">
+            <input id="msgInput" placeholder="输入消息，回车发送…" onkeydown="if(event.key==='Enter'&&!event.isComposing)sendMsg()">
+            <button class="btn btn-primary" onclick="sendMsg()">发送</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <!-- 新会话弹层 -->
+  <div class="sheet-mask" id="newChatSheet">
+    <div class="sheet">
+      <div class="sheet-head">
+        <h3>发起新会话</h3>
+        <button class="sheet-close" onclick="WineApp.closeSheet('newChatSheet')">✕</button>
+      </div>
+      <div class="sheet-body">
+        <input type="search" id="peerSearch" placeholder="搜索公司名 / 邮箱…" oninput="renderPeerList()">
+        <div id="peerList" class="conv-list"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="js/vendor-supabase.js"></script>
+  <script src="js/config.js"></script>
+  <script src="js/supabase.js"></script>
+  <script>
+    /* ---------- 页面逻辑：站内消息 ---------- */
+
+    var me = null;
+    var allMsgs = [];
+    var allProfiles = {};
+    var convs = {};
+    var allPeers = [];
+    var activePeer = null;
+    var esc = WineApp.escapeHtml;
+    var fmtDate = WineApp.fmtDate;
+
+    async function init() {
+      WineApp.initNav();
+      me = await WineApp.requireAuth();
+      if (!me) return;
+      await refreshMessages();
+      startRealtime();
+      setInterval(refreshMessages, 8000); // 轮询兜底（Realtime 未开启也能用）
+    }
+
+    /* ---------- 会话列表 ---------- */
+
+    async function refreshMessages() {
+      if (!me) return;
+      var res = await WineApp.sb.from('messages')
+        .select('*')
+        .or('sender_id.eq.' + me.id + ',receiver_id.eq.' + me.id)
+        .order('created_at', { ascending: true })
+        .limit(1000);
+      if (res.error) return;
+      allMsgs = res.data || [];
+      rebuildConvs();
+      if (activePeer) renderChat();
+    }
+
+    function rebuildConvs() {
+      convs = {};
+      allMsgs.forEach(function (m) {
+        var peerId = m.sender_id === me.id ? m.receiver_id : m.sender_id;
+        var c = convs[peerId] || { lastAt: m.created_at, unread: 0, lastText: m.content };
+        c.lastAt = m.created_at;
+        c.lastText = m.content;
+        if (m.receiver_id === me.id && !m.is_read) c.unread++;
+        convs[peerId] = c;
+      });
+
+      var ids = Object.keys(convs).filter(function (id) { return !allProfiles[id]; });
+      if (ids.length) {
+        WineApp.sb.from('profiles').select('id, company_name, role, email').in('id', ids).then(function (res) {
+          (res.data || []).forEach(function (p) { allProfiles[p.id] = p; });
+          renderConvList();
+        });
+      } else {
+        renderConvList();
+      }
+    }
+
+    function peerName(id) {
+      var p = allProfiles[id];
+      return p ? (p.company_name || p.email || '未知用户') : '未知用户';
+    }
+
+    function peerIcon(id) {
+      var p = allProfiles[id];
+      return p && p.role === 'supplier' ? '🍷' : '🛒';
+    }
+
+    function renderConvList() {
+      var ids = Object.keys(convs).sort(function (a, b) {
+        return new Date(convs[b].lastAt) - new Date(convs[a].lastAt);
+      });
+      document.getElementById('convList').innerHTML = ids.map(function (id) {
+        var c = convs[id];
+        return '<div class="conv-item' + (activePeer === id ? ' active' : '') + '" onclick="openChat(\'' + id + '\')">'
+          + '<div class="conv-avatar">' + peerIcon(id) + '</div>'
+          + '<div class="conv-info">'
+          + '<div class="conv-name">' + esc(peerName(id)) + '</div>'
+          + '<div class="conv-last">' + esc(c.lastText) + '</div>'
+          + '</div>'
+          + (c.unread > 0 ? '<span class="conv-badge">' + c.unread + '</span>' : '')
+          + '</div>';
+      }).join('') || '<div class="empty"><p>还没有会话，点「新会话」找人聊</p></div>';
+    }
+
+    /* ---------- 聊天窗口 ---------- */
+
+    function openChat(peerId) {
+      activePeer = peerId;
+      document.getElementById('chatEmpty').classList.add('hidden');
+      document.getElementById('chatBox').classList.remove('hidden');
+      document.getElementById('chatLayout').classList.add('chat-open');
+      document.getElementById('chatPeerName').textContent = peerName(peerId);
+      renderChat();
+      markRead();
+      renderConvList();
+    }
+
+    function backToConvs() {
+      activePeer = null;
+      document.getElementById('chatLayout').classList.remove('chat-open');
+      document.getElementById('chatEmpty').classList.remove('hidden');
+      document.getElementById('chatBox').classList.add('hidden');
+      renderConvList();
+    }
+
+    function renderChat() {
+      var msgs = allMsgs.filter(function (m) {
+        return (m.sender_id === me.id && m.receiver_id === activePeer)
+          || (m.sender_id === activePeer && m.receiver_id === me.id);
+      });
+      var box = document.getElementById('chatMsgs');
+      box.innerHTML = msgs.map(function (m) {
+        var mine = m.sender_id === me.id;
+        return '<div class="msg ' + (mine ? 'mine' : 'theirs') + '">' + esc(m.content) + '</div>'
+          + '<div class="msg-time">' + fmtDate(m.created_at) + '</div>';
+      }).join('') || '<div class="msg-time" style="margin-top:20px">还没有消息，先打个招呼吧 👋</div>';
+      box.scrollTop = box.scrollHeight;
+    }
+
+    async function markRead() {
+      if (!activePeer) return;
+      var res = await WineApp.sb.from('messages')
+        .update({ is_read: true })
+        .eq('receiver_id', me.id)
+        .eq('sender_id', activePeer)
+        .eq('is_read', false);
+      if (!res.error && convs[activePeer]) {
+        convs[activePeer].unread = 0;
+        renderConvList();
+      }
+    }
+
+    async function sendMsg() {
+      var content = document.getElementById('msgInput').value.trim();
+      if (!content || !activePeer) return;
+      var res = await WineApp.sb.from('messages').insert({
+        sender_id: me.id,
+        receiver_id: activePeer,
+        content: content,
+      });
+      if (res.error) { WineApp.toast('发送失败：' + res.error.message, 'error'); return; }
+      document.getElementById('msgInput').value = '';
+      await refreshMessages();
+    }
+
+    /* ---------- 实时 + 轮询 ---------- */
+
+    function startRealtime() {
+      try {
+        WineApp.sb.channel('wineb2b-msgs')
+          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages' }, function (payload) {
+            var m = payload.new;
+            if (!me || (m.sender_id !== me.id && m.receiver_id !== me.id)) return;
+            refreshMessages();
+            if (m.receiver_id === me.id && activePeer !== m.sender_id) {
+              WineApp.toast('收到新消息', 'info');
+            }
+          })
+          .subscribe();
+      } catch (e) { /* Realtime 不可用 → 8 秒轮询兜底 */ }
+    }
+
+    /* ---------- 新会话 ---------- */
+
+    async function openNewChat() {
+      WineApp.openSheet('newChatSheet');
+      if (allPeers.length) { renderPeerList(); return; }
+      var res = await WineApp.sb.from('profiles')
+        .select('id, company_name, role, email, contact_name')
+        .neq('id', me.id)
+        .order('created_at', { ascending: false })
+        .limit(200);
+      if (res.error) { WineApp.toast('加载用户失败：' + res.error.message, 'error'); return; }
+      allPeers = res.data || [];
+      allPeers.forEach(function (p) { allProfiles[p.id] = p; });
+      renderPeerList();
+    }
+
+    function renderPeerList() {
+      var kw = document.getElementById('peerSearch').value.trim().toLowerCase();
+      var list = allPeers.filter(function (p) {
+        if (!kw) return true;
+        return ((p.company_name || '') + ' ' + (p.email || '') + ' ' + (p.contact_name || '')).toLowerCase().indexOf(kw) !== -1;
+      });
+      document.getElementById('peerList').innerHTML = list.map(function (p) {
+        return '<div class="conv-item" onclick="pickPeer(\'' + p.id + '\')">'
+          + '<div class="conv-avatar">' + (p.role === 'supplier' ? '🍷' : '🛒') + '</div>'
+          + '<div class="conv-info">'
+          + '<div class="conv-name">' + esc(p.company_name || p.email) + '</div>'
+          + '<div class="conv-last">' + (p.role === 'supplier' ? '供应商' : '采购商') + ' · ' + esc(p.email || '') + '</div>'
+          + '</div></div>';
+      }).join('') || '<p class="page-sub" style="padding:12px">没有匹配的用户</p>';
+    }
+
+    function pickPeer(id) {
+      WineApp.closeSheet('newChatSheet');
+      document.getElementById('peerSearch').value = '';
+      openChat(id);
+    }
+
+    init();
+  </script>
+</body>
+</html>

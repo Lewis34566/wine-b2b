@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Yantai Wine Hub | Chinese Wine Supplier Database</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f7f7f5;
+      color: #222;
+      line-height: 1.6;
+    }
+
+    a {
+      text-decoration: none;
+      color: inherit;
+    }
+
+    /* Navbar */
+
+    nav {
+      height: 72px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 7%;
+      background: white;
+      border-bottom: 1px solid #eee;
+    }
+
+    .logo {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      white-space: nowrap;
+    }
+
+    .logo span {
+      color: #8b1e3f;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 30px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .nav-links a:hover {
+      color: #8b1e3f;
+    }
+
+    .nav-button {
+      background: #8b1e3f;
+      color: white;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 14px;
+      white-space: nowrap;
+    }
+
+    /* Nav actions (app entry: 登录/注册 · 我的后台 · 退出) */
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-user {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .nav-user .nav-name {
+      max-width: 150px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .role-badge {
+      font-size: 11px;
+      padding: 3px 9px;
+      border-radius: 20px;
+      white-space: nowrap;
+    }
+
+    .role-badge.role-supplier {
+      background: #f2e4e9;
+      color: #8b1e3f;
+    }
+
+    .role-badge.role-buyer {
+      background: #fdf3e0;
+      color: #a8741a;
+    }
+
+    .nav-ghost {
+      background: transparent;
+      border: 1px solid #e6d3d9;
+      color: #8b1e3f;
+      padding: 9px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      cursor: pointer;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    /* Hero */
+
+    .hero {
+      min-height: 580px;
+      padding: 90px 7%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background:
+        linear-gradient(
+          90deg,
+          rgba(255,255,255,0.98),
+          rgba(255,255,255,0.78)
+        ),
+        url("https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?auto=format&fit=crop&w=1600&q=80")
+        center/cover;
+    }
+
+    .hero-content {
+      max-width: 650px;
+    }
+
+    .tag {
+      display: inline-block;
+      padding: 7px 13px;
+      background: #f2e4e9;
+      color: #8b1e3f;
+      border-radius: 20px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+
+    .hero h1 {
+      font-size: 56px;
+      line-height: 1.08;
+      margin-bottom: 25px;
+      letter-spacing: -1.5px;
+    }
+
+    .hero h1 span {
+      color: #8b1e3f;
+    }
+
+    .hero p {
+      font-size: 19px;
+      color: #555;
+      max-width: 600px;
+      margin-bottom: 35px;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .primary-btn {
+      background: #8b1e3f;
+      color: white;
+      padding: 14px 25px;
+      border-radius: 7px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 15px;
+    }
+
+    .secondary-btn {
+      background: white;
+      border: 1px solid #ccc;
+      padding: 14px 25px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 15px;
+    }
+
+    .hero-buttons a {
+      display: inline-block;
+    }
+
+    /* Stats */
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      background: white;
+      padding: 35px 7%;
+      border-bottom: 1px solid #eee;
+    }
+
+    .stat {
+      text-align: center;
+      border-right: 1px solid #eee;
+    }
+
+    .stat:last-child {
+      border: none;
+    }
+
+    .stat h2 {
+      font-size: 30px;
+      color: #8b1e3f;
+    }
+
+    .stat p {
+      font-size: 13px;
+      color: #777;
+    }
+
+    /* Database */
+
+    .database {
+      padding: 90px 7%;
+    }
+
+    .section-title {
+      text-align: center;
+      margin-bottom: 45px;
+    }
+
+    .section-title h2 {
+      font-size: 38px;
+      margin-bottom: 12px;
+    }
+
+    .section-title p {
+      color: #777;
+    }
+
+    .search-box {
+      display: flex;
+      gap: 10px;
+      max-width: 900px;
+      margin: 0 auto 30px;
+    }
+
+    .search-box input,
+    .search-box select {
+      padding: 14px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      background: white;
+    }
+
+    .search-box input {
+      flex: 1;
+    }
+
+    /* Table */
+
+    .table-container {
+      background: white;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1px solid #eee;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 18px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+      font-size: 14px;
+    }
+
+    th {
+      background: #fafafa;
+      color: #666;
+      font-size: 12px;
+      text-transform: uppercase;
+    }
+
+    .badge {
+      padding: 5px 9px;
+      border-radius: 20px;
+      font-size: 11px;
+      background: #edf6ed;
+      color: #36723b;
+    }
+
+    .locked {
+      filter: blur(4px);
+      user-select: none;
+    }
+
+    .view-btn {
+      background: #8b1e3f;
+      color: white;
+      border: none;
+      padding: 8px 13px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+
+    /* Pricing */
+
+    .pricing {
+      padding: 90px 7%;
+      background: #171717;
+      color: white;
+      text-align: center;
+    }
+
+    .pricing h2 {
+      font-size: 40px;
+      margin-bottom: 10px;
+    }
+
+    .pricing-subtitle {
+      color: #aaa;
+      margin-bottom: 40px;
+    }
+
+    .price-card {
+      max-width: 430px;
+      margin: auto;
+      background: white;
+      color: #222;
+      padding: 40px;
+      border-radius: 12px;
+    }
+
+    .price {
+      font-size: 52px;
+      font-weight: 700;
+      color: #8b1e3f;
+    }
+
+    .price-card ul {
+      list-style: none;
+      margin: 25px 0;
+      text-align: left;
+    }
+
+    .price-card li {
+      padding: 8px 0;
+    }
+
+    .price-card li::before {
+      content: "✓";
+      color: #8b1e3f;
+      font-weight: bold;
+      margin-right: 10px;
+    }
+
+    .buy-btn {
+      width: 100%;
+      padding: 15px;
+      border: none;
+      background: #8b1e3f;
+      color: white;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      font-family: inherit;
+      font-size: 15px;
+    }
+
+    /* How it works */
+
+    .how {
+      padding: 90px 7%;
+      background: white;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 25px;
+      max-width: 1000px;
+      margin: auto;
+    }
+
+    .step {
+      padding: 30px;
+      border: 1px solid #eee;
+      border-radius: 10px;
+    }
+
+    .step-number {
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #8b1e3f;
+      color: white;
+      border-radius: 50%;
+      margin-bottom: 20px;
+    }
+
+    .step h3 {
+      margin-bottom: 10px;
+    }
+
+    .step p {
+      color: #777;
+      font-size: 14px;
+    }
+
+    /* Footer */
+
+    footer {
+      padding: 40px 7%;
+      background: #111;
+      color: #999;
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+    }
+
+    /* Modal */
+
+    .modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      align-items: center;
+      justify-content: center;
+      z-index: 999;
+    }
+
+    .modal-content {
+      background: white;
+      padding: 40px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 450px;
+      text-align: center;
+    }
+
+    .modal-content h2 {
+      margin-bottom: 10px;
+    }
+
+    .modal-content p {
+      color: #666;
+      margin-bottom: 25px;
+    }
+
+    .close {
+      margin-top: 15px;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      color: #777;
+      font-family: inherit;
+      font-size: 14px;
+    }
+
+    /* Mobile */
+
+    @media (max-width: 800px) {
+
+      .nav-links {
+        display: none;
+      }
+
+      .nav-user {
+        display: none;
+      }
+
+      .hero {
+        padding: 70px 6%;
+      }
+
+      .hero h1 {
+        font-size: 40px;
+      }
+
+      .stats {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 25px;
+      }
+
+      .stat {
+        border: none;
+      }
+
+      .steps {
+        grid-template-columns: 1fr;
+      }
+
+      .search-box {
+        flex-direction: column;
+      }
+
+      .table-container {
+        overflow-x: auto;
+      }
+
+      table {
+        min-width: 800px;
+      }
+
+      footer {
+        flex-direction: column;
+        gap: 10px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- NAV -->
+
+<nav>
+  <div class="logo">
+    Yantai <span>Wine Hub</span>
+  </div>
+
+  <div class="nav-links">
+    <a href="#database">Database</a>
+    <a href="#how">How It Works</a>
+    <a href="#pricing">Pricing</a>
+    <a href="home.html">酒款大厅</a>
+  </div>
+
+  <div class="nav-actions">
+    <span id="navUser" class="nav-user"></span>
+    <a id="navDash" class="nav-button hidden" href="buyer-dashboard.html">我的后台</a>
+    <a id="navLogin" class="nav-button" href="login.html">登录 / 注册</a>
+    <button id="navLogout" class="nav-ghost hidden" onclick="WineApp.logout()">退出</button>
+  </div>
+</nav>
+
+
+<!-- HERO -->
+
+<section class="hero">
+
+  <div class="hero-content">
+
+    <div class="tag">
+      B2B Wine Sourcing Platform
+    </div>
+
+    <h1>
+      Find Reliable
+      <span>Wine Suppliers</span>
+      in Yantai, China.
+    </h1>
+
+    <p>
+      Discover verified Chinese wine suppliers, wineries,
+      exporters and OEM manufacturers in one searchable database.
+    </p>
+
+    <div class="hero-buttons">
+
+      <a href="home.html">
+        <button class="primary-btn">
+          Explore Suppliers · 酒款大厅
+        </button>
+      </a>
+
+      <a href="#pricing">
+        <button class="secondary-btn">
+          Get Full Database — $10
+        </button>
+      </a>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- STATS -->
+
+<section class="stats">
+
+  <div class="stat">
+    <h2>50+</h2>
+    <p>Wine Suppliers</p>
+  </div>
+
+  <div class="stat">
+    <h2>10+</h2>
+    <p>Wine Categories</p>
+  </div>
+
+  <div class="stat">
+    <h2>100%</h2>
+    <p>B2B Focused</p>
+  </div>
+
+  <div class="stat">
+    <h2>$10</h2>
+    <p>Full Database Access</p>
+  </div>
+
+</section>
+
+
+<!-- DATABASE -->
+
+<section class="database" id="database">
+
+  <div class="section-title">
+
+    <h2>Wine Supplier Database</h2>
+
+    <p>
+      Preview selected suppliers from Yantai's wine industry.
+    </p>
+
+  </div>
+
+
+  <div class="search-box">
+
+    <input
+      type="text"
+      id="searchInput"
+      placeholder="Search winery, city or wine type..."
+      onkeyup="searchDatabase()"
+    />
+
+    <select id="wineType" onchange="searchDatabase()">
+
+      <option value="">All Wine Types</option>
+
+      <option value="Red Wine">
+        Red Wine
+      </option>
+
+      <option value="White Wine">
+        White Wine
+      </option>
+
+      <option value="Sparkling">
+        Sparkling
+      </option>
+
+      <option value="OEM">
+        OEM
+      </option>
+
+    </select>
+
+  </div>
+
+
+  <div class="table-container">
+
+    <table>
+
+      <thead>
+
+        <tr>
+
+          <th>Company</th>
+          <th>Location</th>
+          <th>Wine Type</th>
+          <th>Export</th>
+          <th>Contact</th>
+
+        </tr>
+
+      </thead>
+
+      <tbody id="supplierTable">
+
+        <tr>
+
+          <td>
+            Yantai Winery A
+          </td>
+
+          <td>
+            Penglai
+          </td>
+
+          <td>
+            Red Wine
+          </td>
+
+          <td>
+            <span class="badge">
+              Export
+            </span>
+          </td>
+
+          <td class="locked">
+            contact@example.com
+          </td>
+
+        </tr>
+
+
+        <tr>
+
+          <td>
+            Yantai Winery B
+          </td>
+
+          <td>
+            Longkou
+          </td>
+
+          <td>
+            White Wine
+          </td>
+
+          <td>
+            <span class="badge">
+              Export
+            </span>
+          </td>
+
+          <td class="locked">
+            +86 138 **** 8888
+          </td>
+
+        </tr>
+
+
+        <tr>
+
+          <td>
+            Yantai Winery C
+          </td>
+
+          <td>
+            Yantai
+          </td>
+
+          <td>
+            Sparkling
+          </td>
+
+          <td>
+            <span class="badge">
+              Export
+            </span>
+          </td>
+
+          <td class="locked">
+            sales@********.com
+          </td>
+
+        </tr>
+
+      </tbody>
+
+    </table>
+
+  </div>
+
+</section>
+
+
+<!-- PRICING -->
+
+<section class="pricing" id="pricing">
+
+  <h2>
+    Get Full Access
+  </h2>
+
+  <p class="pricing-subtitle">
+    One-time payment. Download the complete supplier database.
+  </p>
+
+
+  <div class="price-card">
+
+    <div class="price">
+      $10
+    </div>
+
+    <p>
+      Yantai Wine Supplier Database
+    </p>
+
+    <ul>
+
+      <li>50+ wine suppliers</li>
+
+      <li>Business emails</li>
+
+      <li>Company websites</li>
+
+      <li>Phone / WhatsApp information</li>
+
+      <li>Wine categories</li>
+
+      <li>Export capability</li>
+
+      <li>OEM availability</li>
+
+      <li>Supplier source & verification date</li>
+
+    </ul>
+
+    <button
+      class="buy-btn"
+      onclick="openPayment()"
+    >
+      Unlock Database — $10
+    </button>
+
+  </div>
+
+</section>
+
+
+<!-- HOW -->
+
+<section class="how" id="how">
+
+  <div class="section-title">
+
+    <h2>
+      How It Works
+    </h2>
+
+    <p>
+      Find Chinese wine suppliers in three simple steps.
+    </p>
+
+  </div>
+
+
+  <div class="steps">
+
+    <div class="step">
+
+      <div class="step-number">
+        1
+      </div>
+
+      <h3>
+        Search
+      </h3>
+
+      <p>
+        Search suppliers by location, wine type,
+        export capability and OEM availability.
+      </p>
+
+    </div>
+
+
+    <div class="step">
+
+      <div class="step-number">
+        2
+      </div>
+
+      <h3>
+        Unlock
+      </h3>
+
+      <p>
+        Purchase the complete database for only
+        $10.
+      </p>
+
+    </div>
+
+
+    <div class="step">
+
+      <div class="step-number">
+        3
+      </div>
+
+      <h3>
+        Contact
+      </h3>
+
+      <p>
+        Contact Chinese wine suppliers directly
+        and start your sourcing process.
+      </p>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+<!-- FOOTER -->
+
+<footer>
+
+  <div>
+    © 2026 Yantai Wine Hub
+  </div>
+
+  <div>
+    B2B Wine Sourcing · Yantai · China
+  </div>
+
+</footer>
+
+
+<!-- MODAL -->
+
+<div class="modal" id="paymentModal">
+
+  <div class="modal-content">
+
+    <h2>
+      Unlock Yantai Wine Database
+    </h2>
+
+    <p>
+      Full database access — $10
+    </p>
+
+    <button
+      class="buy-btn"
+      onclick="alert('Payment gateway will be connected here.')"
+    >
+      Continue to Payment
+    </button>
+
+    <button
+      class="close"
+      onclick="closePayment()"
+    >
+      Cancel
+    </button>
+
+  </div>
+
+</div>
+
+
+<script>
+
+  function searchDatabase() {
+
+    const input =
+      document
+        .getElementById("searchInput")
+        .value
+        .toLowerCase();
+
+    const type =
+      document
+        .getElementById("wineType")
+        .value
+        .toLowerCase();
+
+    const rows =
+      document.querySelectorAll(
+        "#supplierTable tr"
+      );
+
+    rows.forEach(row => {
+
+      const text =
+        row.innerText.toLowerCase();
+
+      const matchSearch =
+        text.includes(input);
+
+      const matchType =
+        !type || text.includes(type);
+
+      row.style.display =
+        matchSearch && matchType
+          ? ""
+          : "none";
+
+    });
+
+  }
+
+
+  function openPayment() {
+
+    document
+      .getElementById("paymentModal")
+      .style.display = "flex";
+
+  }
+
+
+  function closePayment() {
+
+    document
+      .getElementById("paymentModal")
+      .style.display = "none";
+
+  }
+
+</script>
+
+<script src="js/vendor-supabase.js"></script>
+<script src="js/config.js"></script>
+<script src="js/supabase.js"></script>
+<script>
+  /* 接入登录态：已登录时展示公司名 + 角色徽章，并把入口换成「我的后台 / 退出」 */
+  if (window.WineApp && WineApp.initNav) WineApp.initNav();
+</script>
+
+</body>
+</html>
