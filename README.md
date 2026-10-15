@@ -11,7 +11,13 @@
 
 **https://lewis34566.github.io/wine-b2b/**
 
-（GitHub Pages 托管，源码仓库：https://github.com/Lewis34566/wine-b2b ）
+（GitHub Pages 托管，源码仓库：https://github.com/Lewis34566/wine-b2b ；备用演示：https://winelink-b2b.app.workbuddy.host/ ）
+
+界面支持 **中文 / English / Русский** 三语，右上角切换，选择会被记住。
+
+演示账号（先在 Supabase SQL Editor 执行 `sql/demo_seed.sql`）：
+- 供应商：`demo@jiutong-wine.cn` / `Demo123456`
+- 采购商：`demo@yunxuan-trade.cn` / `Demo123456`
 
 ## 功能
 
@@ -41,8 +47,11 @@
 ├── css/style.css            全站样式
 ├── js/config.js             ★ 唯一需要填密钥的文件（第 10、13 行）
 ├── js/supabase.js           公共模块：客户端初始化 + 工具函数 + 导航 + 弹层
+├── js/i18n.js               三语字典与切换逻辑（zh 默认 / en / ru，localStorage 记忆）
 ├── js/vendor-supabase.js    本地化的 supabase-js v2 UMD 版（约 213KB，勿改）
 ├── sql/supabase_setup.sql   建表 + RLS 策略 + 触发器（幂等，可重复执行）
+├── sql/demo_seed.sql        演示种子数据（2 个演示账号 + 8 款三语酒，幂等）
+├── assets/favicon.svg       站点图标
 ├── docs/冒烟测试清单.md       按顺序验证全流程
 └── docs/Supabase控制台操作指南.md  从零配置 Supabase
 ```
@@ -65,7 +74,7 @@
 ## 手机同 WiFi 访问
 
 1. 电脑查局域网 IP：`ipconfig`（Windows）/ `ifconfig`（Mac），
-   找 WLAN 无线网卡的 IPv4 地址（例如 `192.168.243.174`）。
+   找 WLAN 无线网卡的 IPv4 地址（示例 `192.168.x.x`，以你本机实际为准）。
 2. 手机连同一 WiFi，浏览器打开 `http://192.168.243.174:8000/index.html`。
 3. Windows 防火墙若拦截 8000 端口，以管理员身份运行：
    ```

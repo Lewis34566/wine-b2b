@@ -5,6 +5,9 @@
 -- 设计原则：只增不改（无 DROP / DELETE），可重复执行
 -- 用法：Supabase 控制台 → SQL Editor → 全文粘贴 → Run
 -- 自检预期：业务表 5 行、策略 15 行、触发器 8 个
+-- 2026-10 三语版更新：wines 新增 name_en/name_ru/description_en/description_ru 四列。
+--   已部署环境请重跑本脚本一次（新列才会生效）。
+--   注意：profiles 查询策略保持「仅登录可见」不变（供应商资料暂不向游客公开）。
 -- =====================================================================
 
 create extension if not exists pgcrypto;
@@ -27,6 +30,8 @@ create table if not exists public.wines (
   id uuid primary key default gen_random_uuid(),
   supplier_id uuid not null references public.profiles (id) on delete cascade,
   name text not null,
+  name_en text,
+  name_ru text,
   origin text,
   vintage integer,
   variety text,
@@ -34,6 +39,8 @@ create table if not exists public.wines (
   price numeric(10,2) not null default 0 check (price >= 0),
   stock integer not null default 0 check (stock >= 0),
   description text,
+  description_en text,
+  description_ru text,
   image_url text,
   status text not null default 'on_sale',
   created_at timestamptz not null default now()
@@ -94,6 +101,8 @@ alter table public.profiles
 alter table public.wines
   add column if not exists supplier_id uuid references public.profiles (id) on delete cascade,
   add column if not exists name text,
+  add column if not exists name_en text,
+  add column if not exists name_ru text,
   add column if not exists origin text,
   add column if not exists vintage integer,
   add column if not exists variety text,
@@ -101,6 +110,8 @@ alter table public.wines
   add column if not exists price numeric(10,2) default 0,
   add column if not exists stock integer default 0,
   add column if not exists description text,
+  add column if not exists description_en text,
+  add column if not exists description_ru text,
   add column if not exists image_url text,
   add column if not exists status text default 'on_sale',
   add column if not exists created_at timestamptz default now();
