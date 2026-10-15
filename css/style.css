@@ -104,6 +104,31 @@ input, select, textarea { font-family: inherit; font-size: 15px; }
 .chip-gold { background: var(--gold-soft); color: #8a6d1a; }
 .chip-gray { background: #efedea; color: #7a736c; }
 
+/* ---------- 语言切换器 ---------- */
+.lang-switch {
+  border: 1px solid var(--border); border-radius: 8px;
+  padding: 5px 6px; font-size: 13px; background: #fff; color: var(--text);
+  cursor: pointer; outline: none;
+}
+.lang-switch:focus { border-color: var(--wine); }
+
+/* ---------- 确认弹层（confirmSheet） ---------- */
+.confirm-mask {
+  position: fixed; inset: 0; background: rgba(20,10,14,.5); z-index: 130;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0; pointer-events: none; transition: opacity .2s;
+}
+.confirm-mask.open { opacity: 1; pointer-events: auto; }
+.confirm-card {
+  width: 90%; max-width: 320px; background: var(--card);
+  border-radius: 14px; padding: 22px; box-shadow: var(--shadow);
+  transform: translateY(12px); transition: transform .2s;
+}
+.confirm-mask.open .confirm-card { transform: translateY(0); }
+.confirm-title { font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+.confirm-msg { font-size: 13.5px; color: var(--muted); margin-bottom: 18px; white-space: pre-wrap; }
+.confirm-actions { display: flex; justify-content: flex-end; gap: 8px; }
+
 /* ---------- 表单 ---------- */
 label { display: block; font-size: 13.5px; color: var(--muted); font-weight: 600; }
 input[type=text], input[type=email], input[type=password], input[type=number],

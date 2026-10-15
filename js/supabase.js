@@ -37,7 +37,9 @@
   }
 
   function fmtMoney(n) {
-    return '¥' + Number(n || 0).toLocaleString('zh-CN', {
+    var locale = (WineApp && WineApp.getLang && WineApp.getLang() === 'ru') ? 'ru-RU'
+      : (WineApp && WineApp.getLang && WineApp.getLang() === 'en') ? 'en-US' : 'zh-CN';
+    return '¥' + Number(n || 0).toLocaleString(locale, {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
@@ -46,8 +48,13 @@
   function fmtDate(s) {
     if (!s) return '—';
     var d = new Date(s);
-    var pad = function (x) { return String(x).padStart(2, '0'); };
-    return (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    if (isNaN(d.getTime())) return '—';
+    if (WineApp && WineApp.getLang && WineApp.getLang() === 'zh') {
+      var pad = function (x) { return String(x).padStart(2, '0'); };
+      return (d.getMonth() + 1) + '月' + d.getDate() + '日 ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+    }
+    var locale = (WineApp && WineApp.getLang && WineApp.getLang() === 'ru') ? 'ru-RU' : 'en-US';
+    return d.toLocaleString(locale, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
   }
 
   /* ---------------- 提示 toast ---------------- */
@@ -131,7 +138,7 @@
     if (!user) return null;
     var p = await currentProfile();
     if (p.role !== role) {
-      toast(p.role === 'supplier' ? '当前账号是供应商，请使用供应商后台' : '当前账号是采购商，请使用采购商后台', 'error');
+      toast(p.role === 'supplier' ? WineApp.t('nav.roleErrSupplier') : WineApp.t('nav.roleErrBuyer'), 'error');
       setTimeout(function () {
         location.href = p.role === 'supplier' ? 'supplier-dashboard.html' : 'buyer-dashboard.html';
       }, 900);
@@ -148,8 +155,8 @@
 
   // 重新发送注册验证邮件（Supabase 开启邮箱确认时，注册后需点邮件里的链接才能登录）
   async function resendConfirm(email) {
-    if (!sb) return { error: { message: '未配置 Supabase 密钥' } };
-    if (!email) return { error: { message: '缺少邮箱地址' } };
+    if (!sb) return { error: { message: WineApp.t('common.notConfigured') } };
+    if (!email) return { error: { message: WineApp.t('common.needEmail') } };
     try {
       return await sb.auth.resend({ type: 'signup', email: email });
     } catch (e) {
@@ -179,7 +186,7 @@
 
     var p = await currentProfile();
     if (!p) {
-      if (navUser) navUser.textContent = '未登录';
+      if (navUser) navUser.textContent = WineApp.t('nav.guest');
       if (navLogin) navLogin.classList.remove('hidden');
       if (navLogout) navLogout.classList.add('hidden');
       if (navDash) navDash.classList.add('hidden');
@@ -189,7 +196,7 @@
       navUser.innerHTML =
         '<span class="nav-name">' + escapeHtml(p.company_name || p.email) + '</span>' +
         '<span class="role-badge role-' + escapeHtml(p.role) + '">' +
-        (p.role === 'supplier' ? '供应商' : '采购商') + '</span>';
+        WineApp.roleLabel(p.role) + '</span>';
     }
     if (navLogin) navLogin.classList.add('hidden');
     if (navLogout) navLogout.classList.remove('hidden');
@@ -215,12 +222,53 @@
   var WINE_TYPES = ['红葡萄酒', '白葡萄酒', '起泡酒', '桃红葡萄酒', 'OEM定制'];
 
   function orderChip(status) {
-    var s = ORDER_STATUS[status] || { label: status, cls: 'chip-gray' };
-    return '<span class="chip ' + s.cls + '">' + s.label + '</span>';
+    var s = ORDER_STATUS[status] || { cls: 'chip-gray' };
+    return '<span class="chip ' + s.cls + '">' + escapeHtml(WineApp.t('status.' + status)) + '</span>';
   }
   function inquiryChip(status) {
-    var s = INQUIRY_STATUS[status] || { label: status, cls: 'chip-gray' };
-    return '<span class="chip ' + s.cls + '">' + s.label + '</span>';
+    var s = INQUIRY_STATUS[status] || { cls: 'chip-gray' };
+    return '<span class="chip ' + s.cls + '">' + escapeHtml(WineApp.t('status.' + status)) + '</span>';
+  }
+
+  /* ---------------- 确认弹层（样式化 confirm，替代原生 confirm） ---------------- */
+
+  function confirmSheet(opts) {
+    opts = opts || {};
+    var mask = document.getElementById('confirmMask');
+    if (!mask) {
+      mask = document.createElement('div');
+      mask.id = 'confirmMask';
+      mask.className = 'confirm-mask';
+      mask.innerHTML =
+        '<div class="confirm-card">' +
+        '<div class="confirm-title"></div>' +
+        '<div class="confirm-msg"></div>' +
+        '<div class="confirm-actions">' +
+        '<button type="button" class="btn btn-ghost btn-sm" data-act="cancel"></button>' +
+        '<button type="button" class="btn btn-sm" data-act="ok"></button>' +
+        '</div></div>';
+      document.body.appendChild(mask);
+      mask.addEventListener('click', function (e) {
+        if (e.target === mask || (e.target.getAttribute && e.target.getAttribute('data-act') === 'cancel')) {
+          closeConfirmSheet();
+        } else if (e.target.getAttribute && e.target.getAttribute('data-act') === 'ok') {
+          closeConfirmSheet();
+          if (typeof opts.onOk === 'function') opts.onOk();
+        }
+      });
+    }
+    mask.querySelector('.confirm-title').textContent = opts.title || WineApp.t('common.confirm');
+    mask.querySelector('.confirm-msg').textContent = opts.message || '';
+    var okBtn = mask.querySelector('[data-act="ok"]');
+    okBtn.textContent = opts.okText || WineApp.t('common.confirm');
+    okBtn.className = 'btn btn-sm ' + (opts.danger ? 'btn-danger' : 'btn-primary');
+    mask.querySelector('[data-act="cancel"]').textContent = opts.cancelText || WineApp.t('common.cancel');
+    mask.classList.add('open');
+  }
+
+  function closeConfirmSheet() {
+    var mask = document.getElementById('confirmMask');
+    if (mask) mask.classList.remove('open');
   }
 
   /* ---------------- 导出 ---------------- */
@@ -249,5 +297,7 @@
     WINE_TYPES: WINE_TYPES,
     orderChip: orderChip,
     inquiryChip: inquiryChip,
+    confirmSheet: confirmSheet,
+    closeConfirmSheet: closeConfirmSheet,
   };
 })();
