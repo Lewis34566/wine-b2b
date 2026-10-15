@@ -1,9 +1,11 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" data-page="msg">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>站内消息 - 酒链 B2B</title>
+  <meta name="description" id="metaDesc" content="站内消息：与供应商/采购商实时沟通，Realtime + 轮询兜底" />
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml" />
   <link rel="stylesheet" href="css/style.css" />
 </head>
 <body>
@@ -13,15 +15,20 @@
   <header class="topbar">
     <a class="brand" href="home.html">酒链<span>B2B</span></a>
     <nav class="topnav">
-      <a href="home.html">酒款大厅</a>
-      <a id="navDash" href="buyer-dashboard.html">我的后台</a>
-      <a href="messages.html" class="active">消息</a>
-      <a href="profile.html">资料</a>
+      <a href="home.html" data-i18n="nav.hall">酒款大厅</a>
+      <a id="navDash" href="buyer-dashboard.html" data-i18n="nav.dash">我的后台</a>
+      <a href="messages.html" class="active" data-i18n="nav.msgs">消息</a>
+      <a href="profile.html" data-i18n="nav.profile">资料</a>
     </nav>
     <div class="topbar-user">
+      <select data-lang-switch class="lang-switch" onchange="WineApp.setLang(this.value)">
+        <option value="zh">中文</option>
+        <option value="en">English</option>
+        <option value="ru">Русский</option>
+      </select>
       <span id="navUser" class="nav-user"></span>
-      <a id="navLogin" class="btn btn-sm btn-primary hidden" href="login.html">登录</a>
-      <button id="navLogout" class="btn btn-sm btn-ghost hidden" onclick="WineApp.logout()">退出</button>
+      <a id="navLogin" class="btn btn-sm btn-primary hidden" href="login.html" data-i18n="nav.login">登录</a>
+      <button id="navLogout" class="btn btn-sm btn-ghost hidden" onclick="WineApp.logout()" data-i18n="nav.logout">退出</button>
     </div>
   </header>
 
@@ -29,8 +36,8 @@
     <div class="chat-layout" id="chatLayout">
       <aside class="conv-panel">
         <div class="panel-toolbar" style="padding:14px 16px 8px;margin-bottom:0">
-          <h2 style="font-size:17px">会话</h2>
-          <button class="btn btn-sm btn-primary" onclick="openNewChat()">＋ 新会话</button>
+          <h2 style="font-size:17px" data-i18n="msg.convs">会话</h2>
+          <button type="button" class="btn btn-sm btn-primary" onclick="openNewChat()" data-i18n="msg.newChat">＋ 新会话</button>
         </div>
         <div id="convList" class="conv-list"></div>
       </aside>
@@ -38,17 +45,17 @@
       <section class="chat-main">
         <div class="chat-empty" id="chatEmpty">
           <div class="empty-icon">💬</div>
-          <p>选择左侧会话开始聊天<br>或点「新会话」找人直接谈</p>
+          <p><span data-i18n="msg.empty1">选择左侧会话开始聊天</span><br><span data-i18n="msg.empty2">或点「新会话」找人直接谈</span></p>
         </div>
         <div class="chat-box hidden" id="chatBox">
           <div class="chat-head">
             <strong id="chatPeerName">–</strong>
-            <button class="btn btn-sm btn-ghost" onclick="backToConvs()">← 返回列表</button>
+            <button type="button" class="btn btn-sm btn-ghost" onclick="backToConvs()" data-i18n="msg.back">← 返回列表</button>
           </div>
           <div class="chat-msgs" id="chatMsgs"></div>
           <div class="chat-input">
-            <input id="msgInput" placeholder="输入消息，回车发送…" onkeydown="if(event.key==='Enter'&&!event.isComposing)sendMsg()">
-            <button class="btn btn-primary" onclick="sendMsg()">发送</button>
+            <input id="msgInput" placeholder="输入消息，回车发送…" data-i18n-ph="msg.inputPh" onkeydown="if(event.key==='Enter'&&!event.isComposing)sendMsg()">
+            <button type="button" class="btn btn-primary" onclick="sendMsg()" data-i18n="msg.send">发送</button>
           </div>
         </div>
       </section>
@@ -59,11 +66,11 @@
   <div class="sheet-mask" id="newChatSheet">
     <div class="sheet">
       <div class="sheet-head">
-        <h3>发起新会话</h3>
-        <button class="sheet-close" onclick="WineApp.closeSheet('newChatSheet')">✕</button>
+        <h3 data-i18n="msg.newChatTitle">发起新会话</h3>
+        <button type="button" class="sheet-close" onclick="WineApp.closeSheet('newChatSheet')">✕</button>
       </div>
       <div class="sheet-body">
-        <input type="search" id="peerSearch" placeholder="搜索公司名 / 邮箱…" oninput="renderPeerList()">
+        <input type="search" id="peerSearch" placeholder="搜索公司名 / 邮箱…" data-i18n-ph="msg.peerSearchPh" oninput="renderPeerList()">
         <div id="peerList" class="conv-list"></div>
       </div>
     </div>
@@ -74,6 +81,7 @@
   <script src="js/vendor-supabase.js"></script>
   <script src="js/config.js"></script>
   <script src="js/supabase.js"></script>
+  <script src="js/i18n.js"></script>
   <script>
     /* ---------- 页面逻辑：站内消息 ---------- */
 
@@ -85,6 +93,7 @@
     var activePeer = null;
     var esc = WineApp.escapeHtml;
     var fmtDate = WineApp.fmtDate;
+    var t = WineApp.t;
 
     async function init() {
       WineApp.initNav();
@@ -134,7 +143,7 @@
 
     function peerName(id) {
       var p = allProfiles[id];
-      return p ? (p.company_name || p.email || '未知用户') : '未知用户';
+      return p ? (p.company_name || p.email || t('common.unknownUser')) : t('common.unknownUser');
     }
 
     function peerIcon(id) {
@@ -156,7 +165,7 @@
           + '</div>'
           + (c.unread > 0 ? '<span class="conv-badge">' + c.unread + '</span>' : '')
           + '</div>';
-      }).join('') || '<div class="empty"><p>还没有会话，点「新会话」找人聊</p></div>';
+      }).join('') || '<div class="empty"><p>' + t('msg.noConvs') + '</p></div>';
     }
 
     /* ---------- 聊天窗口 ---------- */
@@ -190,7 +199,7 @@
         var mine = m.sender_id === me.id;
         return '<div class="msg ' + (mine ? 'mine' : 'theirs') + '">' + esc(m.content) + '</div>'
           + '<div class="msg-time">' + fmtDate(m.created_at) + '</div>';
-      }).join('') || '<div class="msg-time" style="margin-top:20px">还没有消息，先打个招呼吧 👋</div>';
+      }).join('') || '<div class="msg-time" style="margin-top:20px">' + t('msg.noMsgs') + '</div>';
       box.scrollTop = box.scrollHeight;
     }
 
@@ -215,7 +224,7 @@
         receiver_id: activePeer,
         content: content,
       });
-      if (res.error) { WineApp.toast('发送失败：' + res.error.message, 'error'); return; }
+      if (res.error) { WineApp.toast(t('common.sendErr', { msg: res.error.message }), 'error'); return; }
       document.getElementById('msgInput').value = '';
       await refreshMessages();
     }
@@ -230,7 +239,7 @@
             if (!me || (m.sender_id !== me.id && m.receiver_id !== me.id)) return;
             refreshMessages();
             if (m.receiver_id === me.id && activePeer !== m.sender_id) {
-              WineApp.toast('收到新消息', 'info');
+              WineApp.toast(t('msg.newMsgToast'), 'info');
             }
           })
           .subscribe();
@@ -247,7 +256,7 @@
         .neq('id', me.id)
         .order('created_at', { ascending: false })
         .limit(200);
-      if (res.error) { WineApp.toast('加载用户失败：' + res.error.message, 'error'); return; }
+      if (res.error) { WineApp.toast(t('msg.loadPeersFail', { msg: res.error.message }), 'error'); return; }
       allPeers = res.data || [];
       allPeers.forEach(function (p) { allProfiles[p.id] = p; });
       renderPeerList();
@@ -264,9 +273,9 @@
           + '<div class="conv-avatar">' + (p.role === 'supplier' ? '🍷' : '🛒') + '</div>'
           + '<div class="conv-info">'
           + '<div class="conv-name">' + esc(p.company_name || p.email) + '</div>'
-          + '<div class="conv-last">' + (p.role === 'supplier' ? '供应商' : '采购商') + ' · ' + esc(p.email || '') + '</div>'
+          + '<div class="conv-last">' + WineApp.roleLabel(p.role) + ' · ' + esc(p.email || '') + '</div>'
           + '</div></div>';
-      }).join('') || '<p class="page-sub" style="padding:12px">没有匹配的用户</p>';
+      }).join('') || '<p class="page-sub" style="padding:12px">' + t('msg.noPeer') + '</p>';
     }
 
     function pickPeer(id) {
@@ -274,6 +283,12 @@
       document.getElementById('peerSearch').value = '';
       openChat(id);
     }
+
+    WineApp.onLangChange(function () {
+      renderConvList();
+      if (activePeer) renderChat();
+      if (allPeers.length) renderPeerList();
+    });
 
     init();
   </script>
