@@ -11,7 +11,7 @@
 
 **https://lewis34566.github.io/wine-b2b/**
 
-（GitHub Pages 托管，源码仓库：https://github.com/Lewis34566/wine-b2b ；备用演示：https://winelink-b2b.app.workbuddy.host/ ）
+(GitHub Pages 托管，源码仓库：https://github.com/Lewis34566/wine-b2b)
 
 界面支持 **中文 / English / Русский** 三语，右上角切换，选择会被记住。
 
